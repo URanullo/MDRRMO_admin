@@ -1,9 +1,14 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+// Removed NavigationContainer to avoid nesting inside Expo Router's container
 import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
 import React, { useEffect, useState } from "react";
 import { Alert, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import 'react-native-gesture-handler';
 import Details from '../components/Details';
 import { auth } from './service/firebaseconfig';
+
+const Tab = createBottomTabNavigator();
 
 export default function App() {
   const [email, setEmail] = useState("");
@@ -13,61 +18,54 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
 
+  const canSubmit = email.trim().length > 0 && password.length > 0 && !isLoading;
+
   // Check authentication state on app load
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        // User is signed in
-        console.log("User is authenticated:", user.email);
-        setIsLoggedIn(true);
-      } else {
-        // User is signed out
-        console.log("User is not authenticated");
-        setIsLoggedIn(false);
-      }
+      setIsLoggedIn(!!user);
       setIsInitializing(false);
     });
-
-    // Cleanup subscription on unmount
     return () => unsubscribe();
   }, []);
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    const trimmedEmail = email.trim();
+    if (!trimmedEmail || !password) {
       Alert.alert("Error", "Please enter both email and password");
       return;
     }
 
     setIsLoading(true);
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      console.log("Login successful:", userCredential.user.email);
-      // Note: We don't need to set setIsLoggedIn(true) here because onAuthStateChanged will handle it
+      await signInWithEmailAndPassword(auth, trimmedEmail, password);
     } catch (error: any) {
-      console.error("Login error:", error);
       let errorMessage = "Login failed. Please try again.";
-      
-      if (error.code === 'auth/user-not-found') {
-        errorMessage = "No account found with this email.";
-      } else if (error.code === 'auth/wrong-password') {
-        errorMessage = "Incorrect password.";
-      } else if (error.code === 'auth/invalid-email') {
-        errorMessage = "Invalid email format.";
-      }
-      
+      if (error.code === 'auth/user-not-found') errorMessage = "No account found with this email.";
+      else if (error.code === 'auth/wrong-password') errorMessage = "Incorrect password.";
+      else if (error.code === 'auth/invalid-email') errorMessage = "Invalid email format.";
       Alert.alert("Login Error", errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleBack = () => {
-    // Sign out the user when going back
-    auth.signOut();
-    // Note: We don't need to set setIsLoggedIn(false) here because onAuthStateChanged will handle it
-  };
+  // Send Alarm screen
+  const SendAlarmScreen = () => (
+    <SafeAreaView style={[styles.container, { padding: 24, alignItems: 'stretch' }]}> 
+      <Text style={[styles.brand, { fontSize: 28 }]}>Send Alarm</Text>
+      <Text style={{ textAlign: 'center', color: '#666', marginBottom: 16 }}>Trigger an alarm for immediate assistance.</Text>
+      <TouchableOpacity style={styles.sosButton} onPress={() => Alert.alert('Send Alarm', 'Alarm sent!')}> 
+        <MaterialIcons name="warning" size={28} color="#fff" />
+        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 18, marginLeft: 8 }}>Send Alarm</Text>
+      </TouchableOpacity>
+    </SafeAreaView>
+  );
 
-  // Show loading screen while checking authentication state
+  // Dummy screen for Log Out (we intercept tab press and show confirm dialog)
+  const DummyScreen = () => <View style={{ flex: 1, backgroundColor: 'transparent' }} />;
+
+  // Loading while initializing auth
   if (isInitializing) {
     return (
       <SafeAreaView style={styles.container}>
@@ -85,11 +83,52 @@ export default function App() {
     );
   }
 
-  // If logged in, show the Details page
+  // After login, show bottom tabs (no NavigationContainer since Expo Router provides one)
   if (isLoggedIn) {
-    return <Details onBack={handleBack} />;
+    return (
+      <Tab.Navigator
+        screenOptions={({ route }) => ({
+          headerShown: false,
+          tabBarShowLabel: true,
+          tabBarActiveTintColor: '#e53935',
+          tabBarInactiveTintColor: '#888',
+          tabBarStyle: { height: 56, paddingBottom: 6, paddingTop: 6 },
+          tabBarIcon: ({ color }) => {
+            let iconName: any = 'home';
+            if (route.name === 'Home') iconName = 'home';
+            else if (route.name === 'Send Alarm') iconName = 'warning';
+            else if (route.name === 'Log Out') iconName = 'logout';
+            return <MaterialIcons name={iconName} size={22} color={color} />;
+          },
+        })}
+      >
+        <Tab.Screen name="Home" options={{ tabBarLabel: 'Home' }}>
+          {() => <Details />}
+        </Tab.Screen>
+        <Tab.Screen name="Send Alarm" component={SendAlarmScreen} options={{ tabBarLabel: 'Send Alarm' }} />
+        <Tab.Screen
+          name="Log Out"
+          component={DummyScreen}
+          options={{ tabBarLabel: 'Log Out' }}
+          listeners={{
+            tabPress: (e) => {
+              e.preventDefault();
+              Alert.alert(
+                'Log out',
+                'Are you sure you want to log out?',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  { text: 'Log Out', style: 'destructive', onPress: () => auth.signOut() },
+                ]
+              );
+            },
+          }}
+        />
+      </Tab.Navigator>
+    );
   }
 
+  // Login screen (default)
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.logoContainer}>
@@ -110,6 +149,10 @@ export default function App() {
           keyboardType="email-address"
           value={email}
           onChangeText={setEmail}
+          returnKeyType="next"
+          onSubmitEditing={() => {
+            // focus password would be ideal; for now no ref, so do nothing
+          }}
         />
         <Text style={styles.label}>Password</Text>
         <View style={styles.passwordRow}>
@@ -120,6 +163,8 @@ export default function App() {
             secureTextEntry={!showPassword}
             value={password}
             onChangeText={setPassword}
+            returnKeyType="go"
+            onSubmitEditing={handleLogin}
           />
           <TouchableOpacity onPress={() => setShowPassword((show) => !show)} style={styles.eyeIcon}>
             <MaterialIcons name={showPassword ? "visibility-off" : "visibility"} size={24} color="#888" />
@@ -129,9 +174,9 @@ export default function App() {
           Use at least 8 characters with 1 number, and one special character.
         </Text>
         <TouchableOpacity 
-          style={[styles.loginButton, isLoading && styles.loginButtonDisabled]} 
+          style={[styles.loginButton, (!canSubmit) && styles.loginButtonDisabled]} 
           onPress={handleLogin}
-          disabled={isLoading}
+          disabled={!canSubmit}
         >
           <Text style={styles.loginButtonText}>
             {isLoading ? "LOGGING IN..." : "LOG IN"}
@@ -170,6 +215,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#e53935',
     lineHeight: 40,
+    textAlign: 'center',
   },
   subtitleBrand: {
     color: '#e53935',
@@ -245,5 +291,14 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 13,
     textDecorationLine: 'underline',
+  },
+  sosButton: {
+    backgroundColor: '#e53935',
+    borderRadius: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
   },
 });

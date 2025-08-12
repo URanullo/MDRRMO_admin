@@ -1,145 +1,112 @@
-import { Feather, MaterialIcons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import React from "react";
-import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 
-export default function Details({ onBack }) {
+export default function Details() {
+  const { width } = useWindowDimensions();
+  const isSmall = width < 768;
+
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.container}>
-        {/* Sidebar */}
-        <View style={styles.sidebar}>
-          <View style={styles.profileSection}>
-            <View style={styles.avatarCircle}>
-              <MaterialIcons name="person" size={32} color="#fff" />
+      <View style={styles.mainContent}>
+        {/* Top Bar (no sidebar/back button) */}
+        <View style={[styles.topBar, isSmall && styles.topBarMobile]}>
+          <View style={styles.topBarLeft}>
+            <View style={styles.userCircle}>
+              <MaterialIcons name="person" size={20} color="#fff" />
             </View>
-            <Text style={styles.profileName}>Yover Nullo</Text>
+            {!isSmall && <Text style={styles.userName}>Yover Nullo</Text>}
           </View>
-          <View style={styles.sidebarMenu}>
-            <SidebarItem icon={<Feather name="user" size={20} color="#333" />} label="My details" active />
-            <SidebarItem icon={<Feather name="users" size={20} color="#333" />} label="Users" />
-            <SidebarItem icon={<Feather name="folder" size={20} color="#333" />} label="Cases" />
-            <SidebarItem icon={<Feather name="file-text" size={20} color="#333" />} label="Send Alarm" />
+          <View style={[styles.searchContainer, isSmall && styles.searchContainerMobile]}>
+            <MaterialIcons name="search" size={20} color="#888" />
+            <Text style={styles.searchText}>Quick search</Text>
           </View>
-          <View style={styles.sidebarFooter}>
-            <View style={styles.footerBox}>
-              <Text style={styles.footerTitle}>Household</Text>
-              <Text style={styles.footerSubtitle}>Emergency Alarm</Text>
-              <Text style={styles.footerVersion}>Version: 1.0.0.11</Text>
-            </View>
-          </View>
+          <TouchableOpacity style={styles.addUserButton}>
+            <Text style={styles.addUserButtonText}>+ Add User</Text>
+          </TouchableOpacity>
         </View>
-        {/* Main Content */}
-        <View style={styles.mainContent}>
-          {/* Top Bar */}
-          <View style={styles.topBar}>
-            <View style={styles.topBarLeft}>
-              <TouchableOpacity style={styles.backButton} onPress={onBack}>
-                <MaterialIcons name="arrow-back" size={24} color="#333" />
-              </TouchableOpacity>
-              <View style={styles.userCircle}>
-                <MaterialIcons name="person" size={20} color="#fff" />
+
+        {/* Dashboard Cards */}
+        <ScrollView contentContainerStyle={[styles.dashboardScroll, isSmall && styles.dashboardScrollMobile]}>
+          <View style={[styles.dashboardRow, isSmall && styles.dashboardRowMobile]}>
+            {/* Reports Card */}
+            <View style={[styles.cardLarge, isSmall && styles.cardFullWidth]}>
+              <Text style={styles.cardTitle}>Reports</Text>
+              <Text style={styles.cardSubtitle}>Employees</Text>
+              {/* Chart with navigation arrows */}
+              <View style={styles.chartContainer}>
+                <TouchableOpacity style={styles.chartArrow}>
+                  <MaterialIcons name="chevron-left" size={24} color="#ccc" />
+                </TouchableOpacity>
+                <View style={[styles.chartArea, isSmall && styles.chartAreaMobile]}>
+                  <Text style={styles.chartText}>[Area Chart: 2016-2019]</Text>
+                  <View style={styles.chartLegendRow}>
+                    <ChartLegend color="#ff9800" label="Campo" />
+                    <ChartLegend color="#4caf50" label="Poblacion" />
+                    <ChartLegend color="#7c4dff" label="San Francisco" />
+                  </View>
+                </View>
+                <TouchableOpacity style={styles.chartArrow}>
+                  <MaterialIcons name="chevron-right" size={24} color="#ccc" />
+                </TouchableOpacity>
               </View>
-              <Text style={styles.userName}>Yover Nullo</Text>
+              <View style={styles.paginationDots}>
+                <View style={styles.dot} />
+                <View style={styles.dot} />
+                <View style={styles.dot} />
+              </View>
             </View>
-            <View style={styles.searchContainer}>
-              <MaterialIcons name="search" size={20} color="#888" />
-              <Text style={styles.searchText}>Quick search</Text>
+            {/* Statistics Card */}
+            <View style={[styles.cardLarge, isSmall && styles.cardFullWidth]}>
+              <Text style={styles.cardTitle}>Statistics</Text>
+              {/* Donut chart with navigation */}
+              <View style={styles.chartContainer}>
+                <TouchableOpacity style={styles.chartArrow}>
+                  <MaterialIcons name="chevron-left" size={24} color="#ccc" />
+                </TouchableOpacity>
+                <View style={[styles.donutChartArea, isSmall && styles.donutChartAreaMobile]}>
+                  <Text style={styles.chartText}>[Donut Chart]</Text>
+                  <Text style={styles.chartLabel}>By emergency type</Text>
+                  <View style={styles.statsLegendWrap}>
+                    <ChartLegend color="#e53935" label="Accident" />
+                    <ChartLegend color="#ffb300" label="Medical" />
+                    <ChartLegend color="#8bc34a" label="Assault" />
+                    <ChartLegend color="#00bcd4" label="Float" />
+                    <ChartLegend color="#7c4dff" label="Earthquake" />
+                    <ChartLegend color="#ff4081" label="Fire" />
+                    <ChartLegend color="#607d8b" label="Robbery" />
+                  </View>
+                </View>
+                <TouchableOpacity style={styles.chartArrow}>
+                  <MaterialIcons name="chevron-right" size={24} color="#ccc" />
+                </TouchableOpacity>
+              </View>
+              <View style={styles.paginationDots}>
+                <View style={styles.dot} />
+                <View style={styles.dot} />
+                <View style={styles.dot} />
+              </View>
             </View>
-            <TouchableOpacity style={styles.addUserButton}>
-              <Text style={styles.addUserButtonText}>+ Add User</Text>
-            </TouchableOpacity>
           </View>
-          {/* Dashboard Cards */}
-          <ScrollView contentContainerStyle={styles.dashboardScroll}>
-            <View style={styles.dashboardRow}>
-              {/* Reports Card */}
-              <View style={styles.cardLarge}>
-                <Text style={styles.cardTitle}>Reports</Text>
-                <Text style={styles.cardSubtitle}>Employees</Text>
-                {/* Chart with navigation arrows */}
-                <View style={styles.chartContainer}>
-                  <TouchableOpacity style={styles.chartArrow}>
-                    <MaterialIcons name="chevron-left" size={24} color="#ccc" />
-                  </TouchableOpacity>
-                  <View style={styles.chartArea}>
-                    <Text style={styles.chartText}>[Area Chart: 2016-2019]</Text>
-                    <View style={styles.chartLegendRow}>
-                      <ChartLegend color="#ff9800" label="Campo" />
-                      <ChartLegend color="#4caf50" label="Poblacion" />
-                      <ChartLegend color="#7c4dff" label="San Francisco" />
-                    </View>
-                  </View>
-                  <TouchableOpacity style={styles.chartArrow}>
-                    <MaterialIcons name="chevron-right" size={24} color="#ccc" />
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.paginationDots}>
-                  <View style={styles.dot} />
-                  <View style={styles.dot} />
-                  <View style={styles.dot} />
-                </View>
-              </View>
-              {/* Statistics Card */}
-              <View style={styles.cardLarge}>
-                <Text style={styles.cardTitle}>Statistics</Text>
-                {/* Donut chart with navigation */}
-                <View style={styles.chartContainer}>
-                  <TouchableOpacity style={styles.chartArrow}>
-                    <MaterialIcons name="chevron-left" size={24} color="#ccc" />
-                  </TouchableOpacity>
-                  <View style={styles.donutChartArea}>
-                    <Text style={styles.chartText}>[Donut Chart]</Text>
-                    <Text style={styles.chartLabel}>By emergency type</Text>
-                    <View style={styles.statsLegendWrap}>
-                      <ChartLegend color="#e53935" label="Accident" />
-                      <ChartLegend color="#ffb300" label="Medical" />
-                      <ChartLegend color="#8bc34a" label="Assault" />
-                      <ChartLegend color="#00bcd4" label="Float" />
-                      <ChartLegend color="#7c4dff" label="Earthquake" />
-                      <ChartLegend color="#ff4081" label="Fire" />
-                      <ChartLegend color="#607d8b" label="Robbery" />
-                    </View>
-                  </View>
-                  <TouchableOpacity style={styles.chartArrow}>
-                    <MaterialIcons name="chevron-right" size={24} color="#ccc" />
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.paginationDots}>
-                  <View style={styles.dot} />
-                  <View style={styles.dot} />
-                  <View style={styles.dot} />
-                </View>
+          <View style={[styles.dashboardRow, isSmall && styles.dashboardRowMobile]}>
+            {/* New Reports Card */}
+            <View style={[styles.cardSmall, isSmall && styles.cardFullWidth]}>
+              <Text style={styles.cardTitle}>New Reports</Text>
+              <View style={styles.emptyStateBox}>
+                <Text style={styles.emptyStateText}>There are no reports yet</Text>
               </View>
             </View>
-            <View style={styles.dashboardRow}>
-              {/* New Reports Card */}
-              <View style={styles.cardSmall}>
-                <Text style={styles.cardTitle}>New Reports</Text>
-                <View style={styles.emptyStateBox}>
-                  <Text style={styles.emptyStateText}>There are no reports yet</Text>
-                </View>
-              </View>
-              {/* Pending Cases Card */}
-              <View style={styles.cardSmall}>
-                <Text style={styles.cardTitle}>Pending Cases</Text>
-                <View style={styles.emptyStateBox}>
-                  <Text style={styles.emptyStateText}>There are no action items assigned.</Text>
-                </View>
+            {/* Pending Cases Card */}
+            <View style={[styles.cardSmall, isSmall && styles.cardFullWidth]}>
+              <Text style={styles.cardTitle}>Pending Cases</Text>
+              <View style={styles.emptyStateBox}>
+                <Text style={styles.emptyStateText}>There are no action items assigned.</Text>
               </View>
             </View>
-          </ScrollView>
-        </View>
+          </View>
+        </ScrollView>
       </View>
     </SafeAreaView>
-  );
-}
-
-function SidebarItem({ icon, label, active }) {
-  return (
-    <View style={[styles.sidebarItem, active && styles.sidebarItemActive]}>
-      {icon}
-      <Text style={[styles.sidebarItemText, active && styles.sidebarItemTextActive]}>{label}</Text>
-    </View>
   );
 }
 
@@ -157,93 +124,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f7f7f7',
   },
-  container: {
-    flex: 1,
-    flexDirection: 'row',
-    backgroundColor: '#f7f7f7',
-  },
-  // Sidebar
-  sidebar: {
-    width: 220,
-    backgroundColor: '#fff',
-    borderRightWidth: 1,
-    borderRightColor: '#eee',
-    paddingTop: 24,
-    paddingBottom: 16,
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  profileSection: {
-    alignItems: 'center',
-    marginBottom: 32,
-  },
-  avatarCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: '#e53935',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  profileName: {
-    fontWeight: 'bold',
-    fontSize: 16,
-    color: '#222',
-  },
-  sidebarMenu: {
-    flex: 1,
-    width: '100%',
-    marginTop: 16,
-  },
-  sidebarItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    marginBottom: 4,
-  },
-  sidebarItemActive: {
-    backgroundColor: '#fbe9e7',
-  },
-  sidebarItemText: {
-    marginLeft: 12,
-    fontSize: 15,
-    color: '#333',
-  },
-  sidebarItemTextActive: {
-    color: '#e53935',
-    fontWeight: 'bold',
-  },
-  sidebarFooter: {
-    width: '100%',
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  footerBox: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    padding: 12,
-    alignItems: 'center',
-    width: 180,
-  },
-  footerTitle: {
-    fontWeight: 'bold',
-    color: '#222',
-    fontSize: 15,
-  },
-  footerSubtitle: {
-    color: '#e53935',
-    fontSize: 13,
-    fontWeight: 'bold',
-  },
-  footerVersion: {
-    color: '#888',
-    fontSize: 12,
-    marginTop: 4,
-  },
-  // Main Content
+  // Main Content only (no sidebar)
   mainContent: {
     flex: 1,
     padding: 0,
@@ -259,13 +140,13 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 24,
   },
+  topBarMobile: {
+    paddingHorizontal: 12,
+    height: 56,
+  },
   topBarLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  backButton: {
-    padding: 8,
-    marginRight: 8,
   },
   userCircle: {
     width: 32,
@@ -291,6 +172,10 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 16,
   },
+  searchContainerMobile: {
+    marginHorizontal: 8,
+    paddingHorizontal: 12,
+  },
   searchText: {
     marginLeft: 8,
     color: '#888',
@@ -311,10 +196,17 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 16,
   },
+  dashboardScrollMobile: {
+    padding: 12,
+    paddingTop: 12,
+  },
   dashboardRow: {
     flexDirection: 'row',
     marginBottom: 24,
     alignItems: 'flex-start',
+  },
+  dashboardRowMobile: {
+    flexDirection: 'column',
   },
   cardLarge: {
     flex: 1,
@@ -344,6 +236,12 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.06,
     shadowRadius: 8,
   },
+  cardFullWidth: {
+    width: '100%',
+    maxWidth: '100%',
+    marginRight: 0,
+    marginBottom: 16,
+  },
   cardTitle: {
     fontWeight: 'bold',
     fontSize: 18,
@@ -371,6 +269,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  chartAreaMobile: {
+    height: 140,
+  },
   donutChartArea: {
     flex: 1,
     height: 120,
@@ -378,6 +279,10 @@ const styles = StyleSheet.create({
     borderRadius: 60,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  donutChartAreaMobile: {
+    height: 160,
+    borderRadius: 80,
   },
   chartText: {
     color: '#bbb',
@@ -393,6 +298,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 8,
     justifyContent: 'center',
+    flexWrap: 'wrap',
   },
   statsLegendWrap: {
     flexDirection: 'row',
