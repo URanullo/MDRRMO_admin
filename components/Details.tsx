@@ -110,7 +110,7 @@ export default function Details() {
   );
 }
 
-function ChartLegend({ color, label }) {
+function ChartLegend({ color, label }: { color: string; label: string }) {
   return (
     <View style={styles.legendItem}>
       <View style={[styles.legendColor, { backgroundColor: color }]} />

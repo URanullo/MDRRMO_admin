@@ -1,14 +1,9 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-// Removed NavigationContainer to avoid nesting inside Expo Router's container
-import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, onAuthStateChanged, signInWithEmailAndPassword, signOut } from "firebase/auth";
 import React, { useEffect, useState } from "react";
-import { Alert, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import 'react-native-gesture-handler';
-import Details from '../components/Details';
+import { Alert, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, View } from "react-native";
+import BottomTabNavigator from './buttomNavigation';
 import { auth } from './service/firebaseconfig';
-
-const Tab = createBottomTabNavigator();
 
 export default function App() {
   const [email, setEmail] = useState("");
@@ -16,57 +11,179 @@ export default function App() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(true);
+  const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+
+  // Test Firebase connection
+  console.log('Firebase auth object:', auth);
+  console.log('Firebase auth currentUser:', auth.currentUser);
+
+  // Test Firebase connection
+  const testFirebaseConnection = () => {
+    try {
+      console.log('Testing Firebase connection...');
+      console.log('Auth object exists:', !!auth);
+      console.log('Auth app exists:', !!auth.app);
+      console.log('Auth config exists:', !!auth.app.options);
+      console.log('Project ID:', auth.app.options.projectId);
+      return true;
+    } catch (error) {
+      console.log('Firebase connection test failed:', error);
+      return false;
+    }
+  };
+
+  // Run Firebase test on component mount
+  useEffect(() => {
+    testFirebaseConnection();
+  }, []);
 
   const canSubmit = email.trim().length > 0 && password.length > 0 && !isLoading;
 
-  // Check authentication state on app load
+  // Check if user has an active session on app load
   useEffect(() => {
+    console.log('Setting up Firebase auth listener...');
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setIsLoggedIn(!!user);
-      setIsInitializing(false);
+      console.log('Firebase auth state changed:', user ? `User: ${user.email}` : 'No user');
+      // Only auto-login if user has a valid session
+      if (user) {
+        console.log('Setting isLoggedIn to TRUE from Firebase listener');
+        setIsLoggedIn(true);
+      } else {
+        console.log('No valid session, forcing sign out');
+        // Force sign out if no valid session
+        signOut(auth);
+        setIsLoggedIn(false);
+      }
+      setHasCheckedAuth(true);
     });
     return () => unsubscribe();
   }, []);
 
   const handleLogin = async () => {
+    console.log('handleLogin called!');
+    const trimmedEmail = email.trim();
+    console.log('Trimmed email:', trimmedEmail);
+    console.log('Password length:', password.length);
+    
+    if (!trimmedEmail || !password) {
+      console.log('Validation failed - missing email or password');
+      Alert.alert("Error", "Please enter both email and password");
+      return;
+    }
+
+    console.log('Starting Firebase authentication...');
+    setIsLoading(true);
+    
+    try {
+      console.log('Calling signInWithEmailAndPassword...');
+      const userCredential = await signInWithEmailAndPassword(auth, trimmedEmail, password);
+      console.log('Authentication successful!', userCredential.user?.email);
+      
+      if (userCredential.user) {
+        console.log('Setting isLoggedIn to true...');
+        // Clear form data after successful login
+        setEmail("");
+        setPassword("");
+        setIsLoggedIn(true);
+        console.log('Login complete!');
+      }
+    } catch (error: any) {
+      console.log('Firebase Auth Error:', error.code, error.message);
+      let errorMessage = "Login failed. Please try again.";
+      
+      // Firebase specific error codes
+      switch (error.code) {
+        case 'auth/user-not-found':
+          errorMessage = "No account found with this email. Please create an account first.";
+          break;
+        case 'auth/wrong-password':
+          errorMessage = "Incorrect password. Please try again.";
+          break;
+        case 'auth/invalid-email':
+          errorMessage = "Invalid email format. Please enter a valid email.";
+          break;
+        case 'auth/too-many-requests':
+          errorMessage = "Too many failed attempts. Please try again later.";
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = "Network error. Please check your internet connection.";
+          break;
+        default:
+          errorMessage = `Login failed: ${error.message}`;
+      }
+      
+      Alert.alert("Firebase Authentication Error", errorMessage);
+    } finally {
+      console.log('Setting isLoading to false');
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignUp = async () => {
     const trimmedEmail = email.trim();
     if (!trimmedEmail || !password) {
       Alert.alert("Error", "Please enter both email and password");
       return;
     }
 
+    if (password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters long");
+      return;
+    }
+
     setIsLoading(true);
+    
     try {
-      await signInWithEmailAndPassword(auth, trimmedEmail, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, trimmedEmail, password);
+      if (userCredential.user) {
+        Alert.alert("Success", "Account created successfully! You are now logged in.");
+        // Clear form data after successful signup
+        setEmail("");
+        setPassword("");
+        setIsLoggedIn(true);
+      }
     } catch (error: any) {
-      let errorMessage = "Login failed. Please try again.";
-      if (error.code === 'auth/user-not-found') errorMessage = "No account found with this email.";
-      else if (error.code === 'auth/wrong-password') errorMessage = "Incorrect password.";
-      else if (error.code === 'auth/invalid-email') errorMessage = "Invalid email format.";
-      Alert.alert("Login Error", errorMessage);
+      console.log('Firebase SignUp Error:', error.code, error.message);
+      let errorMessage = "Sign up failed. Please try again.";
+      
+      // Firebase specific error codes for signup
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = "An account with this email already exists. Please log in instead.";
+          break;
+        case 'auth/invalid-email':
+          errorMessage = "Invalid email format. Please enter a valid email.";
+          break;
+        case 'auth/weak-password':
+          errorMessage = "Password is too weak. Please use at least 6 characters.";
+          break;
+        case 'auth/network-request-failed':
+          errorMessage = "Network error. Please check your internet connection.";
+          break;
+        default:
+          errorMessage = `Sign up failed: ${error.message}`;
+      }
+      
+      Alert.alert("Firebase SignUp Error", errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Send Alarm screen
-  const SendAlarmScreen = () => (
-    <SafeAreaView style={[styles.container, { padding: 24, alignItems: 'stretch' }]}> 
-      <Text style={[styles.brand, { fontSize: 28 }]}>Send Alarm</Text>
-      <Text style={{ textAlign: 'center', color: '#666', marginBottom: 16 }}>Trigger an alarm for immediate assistance.</Text>
-      <TouchableOpacity style={styles.sosButton} onPress={() => Alert.alert('Send Alarm', 'Alarm sent!')}> 
-        <MaterialIcons name="warning" size={28} color="#fff" />
-        <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 18, marginLeft: 8 }}>Send Alarm</Text>
-      </TouchableOpacity>
-    </SafeAreaView>
-  );
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setIsLoggedIn(false);
+      setEmail("");
+      setPassword("");
+    } catch (error) {
+      Alert.alert("Error", "Failed to log out");
+    }
+  };
 
-  // Dummy screen for Log Out (we intercept tab press and show confirm dialog)
-  const DummyScreen = () => <View style={{ flex: 1, backgroundColor: 'transparent' }} />;
-
-  // Loading while initializing auth
-  if (isInitializing) {
+  // Show loading while checking authentication state
+  if (!hasCheckedAuth) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.logoContainer}>
@@ -77,58 +194,21 @@ export default function App() {
           <Text style={styles.subtitleBrand}>Emergency Alarm</Text>
         </View>
         <View style={styles.card}>
-          <Text style={styles.welcome}>Loading...</Text>
+          <Text style={styles.welcome}>Checking authentication...</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  // After login, show bottom tabs (no NavigationContainer since Expo Router provides one)
+  // After successful login, show bottom tabs
   if (isLoggedIn) {
-    return (
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          headerShown: false,
-          tabBarShowLabel: true,
-          tabBarActiveTintColor: '#e53935',
-          tabBarInactiveTintColor: '#888',
-          tabBarStyle: { height: 56, paddingBottom: 6, paddingTop: 6 },
-          tabBarIcon: ({ color }) => {
-            let iconName: any = 'home';
-            if (route.name === 'Home') iconName = 'home';
-            else if (route.name === 'Send Alarm') iconName = 'warning';
-            else if (route.name === 'Log Out') iconName = 'logout';
-            return <MaterialIcons name={iconName} size={22} color={color} />;
-          },
-        })}
-      >
-        <Tab.Screen name="Home" options={{ tabBarLabel: 'Home' }}>
-          {() => <Details />}
-        </Tab.Screen>
-        <Tab.Screen name="Send Alarm" component={SendAlarmScreen} options={{ tabBarLabel: 'Send Alarm' }} />
-        <Tab.Screen
-          name="Log Out"
-          component={DummyScreen}
-          options={{ tabBarLabel: 'Log Out' }}
-          listeners={{
-            tabPress: (e) => {
-              e.preventDefault();
-              Alert.alert(
-                'Log out',
-                'Are you sure you want to log out?',
-                [
-                  { text: 'Cancel', style: 'cancel' },
-                  { text: 'Log Out', style: 'destructive', onPress: () => auth.signOut() },
-                ]
-              );
-            },
-          }}
-        />
-      </Tab.Navigator>
-    );
+    console.log('isLoggedIn is TRUE - showing BottomTabNavigator');
+    return <BottomTabNavigator onLogout={handleLogout} />;
   }
 
-  // Login screen (default)
+  console.log('Current state - isLoggedIn:', isLoggedIn, 'hasCheckedAuth:', hasCheckedAuth);
+  
+  // Login screen (mandatory - shows until user successfully logs in)
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.logoContainer}>
@@ -160,31 +240,76 @@ export default function App() {
             style={[styles.input, { flex: 1 }]}
             placeholder="Password"
             placeholderTextColor="#aaa"
-            secureTextEntry={!showPassword}
+          secureTextEntry={!showPassword}
             value={password}
             onChangeText={setPassword}
             returnKeyType="go"
             onSubmitEditing={handleLogin}
           />
-          <TouchableOpacity onPress={() => setShowPassword((show) => !show)} style={styles.eyeIcon}>
-            <MaterialIcons name={showPassword ? "visibility-off" : "visibility"} size={24} color="#888" />
-          </TouchableOpacity>
+                  <Pressable onPress={() => setShowPassword((show) => !show)} style={styles.eyeIcon}>
+          <MaterialIcons name={showPassword ? "visibility-off" : "visibility"} size={24} color="#888" />
+        </Pressable>
         </View>
         <Text style={styles.passwordHint}>
           Use at least 8 characters with 1 number, and one special character.
         </Text>
-        <TouchableOpacity 
-          style={[styles.loginButton, (!canSubmit) && styles.loginButtonDisabled]} 
-          onPress={handleLogin}
-          disabled={!canSubmit}
+        <Pressable 
+          style={({ pressed }) => [
+            styles.loginButton,
+            pressed && { opacity: 0.7 }
+          ]} 
+          onPress={() => {
+            console.log('LOG IN button pressed!');
+            console.log('Email:', email);
+            console.log('Password length:', password.length);
+            
+            if (email.trim() && password) {
+              if (isSignUp) {
+                console.log('Calling handleSignUp...');
+                handleSignUp();
+              } else {
+                console.log('Calling handleLogin...');
+                handleLogin();
+              }
+            } else {
+              console.log('Form validation failed');
+              Alert.alert('Error', 'Please enter both email and password');
+            }
+          }}
+          android_ripple={{ color: 'rgba(255, 255, 255, 0.2)' }}
+          android_disableSound={false}
         >
           <Text style={styles.loginButtonText}>
-            {isLoading ? "LOGGING IN..." : "LOG IN"}
+            {isLoading ? (isSignUp ? "CREATING ACCOUNT..." : "LOGGING IN...") : (isSignUp ? "SIGN UP" : "LOG IN")}
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity>
+        </Pressable>
+        <Pressable>
           <Text style={styles.forgot}>Forgot password?</Text>
-        </TouchableOpacity>
+        </Pressable>
+        
+        {/* Toggle between Login and Sign Up */}
+        <Pressable 
+          style={styles.toggleButton} 
+          onPress={() => setIsSignUp(!isSignUp)}
+        >
+          <Text style={styles.toggleButtonText}>
+            {isSignUp ? "Already have an account? Log In" : "Don't have an account? Sign Up"}
+          </Text>
+        </Pressable>
+        
+        {/* Test Firebase connection */}
+        <Pressable 
+          style={[styles.loginButton, { backgroundColor: '#FF9800', marginTop: 16 }]} 
+          onPress={() => {
+            console.log('Testing Firebase connection...');
+            testFirebaseConnection();
+            Alert.alert('Firebase Test', 'Check console for connection status');
+          }}
+        >
+          <Text style={styles.loginButtonText}>TEST FIREBASE</Text>
+        </Pressable>
+        
+
       </View>
     </SafeAreaView>
   );
@@ -248,7 +373,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   input: {
-    height: 40,
+    height: Platform.OS === 'ios' ? 44 : 48,
     borderColor: '#ddd',
     borderWidth: 1,
     borderRadius: 6,
@@ -256,6 +381,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fafafa',
     fontSize: 15,
     marginBottom: 4,
+    minHeight: Platform.OS === 'ios' ? 44 : 48, // iOS and Android touch target guidelines
   },
   passwordRow: {
     flexDirection: 'row',
@@ -274,9 +400,11 @@ const styles = StyleSheet.create({
   loginButton: {
     backgroundColor: '#e53935',
     borderRadius: 16,
-    paddingVertical: 10,
+    paddingVertical: Platform.OS === 'ios' ? 12 : 14,
+    paddingHorizontal: 24,
     alignItems: 'center',
     marginBottom: 8,
+    minHeight: Platform.OS === 'ios' ? 44 : 48, // iOS and Android touch target guidelines
   },
   loginButtonDisabled: {
     backgroundColor: '#ccc',
@@ -292,13 +420,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     textDecorationLine: 'underline',
   },
-  sosButton: {
-    backgroundColor: '#e53935',
-    borderRadius: 16,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
+  toggleButton: {
+    marginTop: 16,
+    paddingVertical: 8,
+  },
+  toggleButtonText: {
+    color: '#E53935',
+    textAlign: 'center',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
