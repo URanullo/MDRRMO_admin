@@ -40,11 +40,12 @@ export default function BottomTabNavigator() {
         },
         tabBarActiveTintColor: '#E53935',
         tabBarInactiveTintColor: '#bbb',
+        tabBarShowLabel: false,
       })}
     >
-      <Tab.Screen name="Home" component={Details} />
-      <Tab.Screen name="Send Alarm" component={SendAlarm} />
-      <Tab.Screen name="Profile" component={Profile} />
+      <Tab.Screen name="Home" component={Details} options={{ headerShown: false, }}/>
+      <Tab.Screen name="Send Alarm" component={SendAlarm} options={{ headerShown: false, }}/>
+      <Tab.Screen name="Profile" component={Profile} options={{ headerShown: false, }}/>
     </Tab.Navigator>
   );
 }

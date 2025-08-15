@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import { useEffect } from 'react';
-import { Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
+import { Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 
 export default function Details() {
   const { width } = useWindowDimensions();
@@ -146,6 +146,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 0,
     backgroundColor: '#f7f7f7',
+    paddingTop: StatusBar.currentHeight || 0,
   },
   topBar: {
     height: 64,
