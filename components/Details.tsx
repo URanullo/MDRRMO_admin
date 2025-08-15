@@ -1,27 +1,9 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import * as Notifications from 'expo-notifications';
-import { useEffect } from 'react';
-import { Alert, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
+import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 
 export default function Details() {
   const { width } = useWindowDimensions();
   const isSmall = width < 768;
-  useEffect(() => {
-    let subscription: Notifications.EventSubscription;
-
-    // 📱 Mobile push listener
-    subscription = Notifications.addNotificationReceivedListener(notification => {
-      console.log('📱 Mobile notification received:', notification);
-      Alert.alert(
-        notification.request.content.title || 'Notification',
-        notification.request.content.body || ''
-      );
-    });
-
-    return () => {
-      if (subscription) subscription.remove?.();
-    };
-  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
