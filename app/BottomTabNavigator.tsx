@@ -5,15 +5,12 @@ import React, { useEffect, useState } from 'react';
 import Details from '../components/Details';
 import Profile from '../components/Profile';
 import SendAlarm from '../components/SendAlarm';
-import { auth } from './service/firebaseconfig';
+import LoginScreen from './screens/login/LoginScreen';
+import { auth } from './services/firebaseConfig';
 
 const Tab = createBottomTabNavigator();
 
-interface BottomTabNavigatorProps {
-  onLogout: () => void;
-}
-
-export default function BottomTabNavigator({ onLogout }: BottomTabNavigatorProps) {
+export default function BottomTabNavigator() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +25,7 @@ export default function BottomTabNavigator({ onLogout }: BottomTabNavigatorProps
   if (loading) return null;
 
   if (!user) {
-    return null;
+    return <LoginScreen />;
   }
 
   return (
@@ -47,10 +44,7 @@ export default function BottomTabNavigator({ onLogout }: BottomTabNavigatorProps
     >
       <Tab.Screen name="Home" component={Details} />
       <Tab.Screen name="Send Alarm" component={SendAlarm} />
-      <Tab.Screen 
-        name="Profile" 
-        children={() => <Profile onLogout={onLogout} />}
-      />
+      <Tab.Screen name="Profile" component={Profile} />
     </Tab.Navigator>
   );
 }

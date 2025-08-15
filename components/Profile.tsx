@@ -1,18 +1,26 @@
+import { signOut } from 'firebase/auth';
 import React from 'react';
-import { SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { auth } from '../app/services/firebaseConfig';
 
-interface ProfileProps {
-  onLogout: () => void;
-}
+export default function Profile() {
 
-export default function Profile({ onLogout }: ProfileProps) {
+     const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      // User will be redirected to LoginScreen by your auth logic in BottomTabNavigator
+    } catch (error) {
+      Alert.alert('Logout Failed', error.message);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.title}>Profile</Text>
         <Text style={styles.subtitle}>User profile information</Text>
         
-        <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
           <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
       </View>
