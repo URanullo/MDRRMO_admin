@@ -1,4 +1,3 @@
-import { BASE_URL } from '@env';
 import Constants from 'expo-constants';
 import * as Device from "expo-device";
 import * as Notifications from 'expo-notifications';
@@ -9,7 +8,9 @@ import { Alert, Platform, StyleSheet } from "react-native";
 import { auth, db } from "../../../app/services/firebaseConfig"; // Adjust the import path as needed
 import LoginForm from './LoginForm';
 
-console.log('Base URL:', BASE_URL);
+const baseUrl = Constants.expoConfig?.extra?.baseUrl;
+ console.log('baseUrl',baseUrl);
+
 
 export default function LoginScreen() {
     const [isLoading, setIsLoading] = useState(false);
@@ -40,8 +41,8 @@ export default function LoginScreen() {
             }
 
             // Send token to your backend
-            console.log("BASE_URL", `${BASE_URL}/save-token`);
-            await fetch(`${BASE_URL}/save-token`, {
+            console.log("BASE_URL", `${baseUrl}/save-token`);
+            await fetch(`${baseUrl}/save-token`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
