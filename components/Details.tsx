@@ -1,132 +1,96 @@
 import { MaterialIcons } from '@expo/vector-icons';
-<<<<<<< HEAD
-import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
-
-export default function Details() {
-=======
+import { useNavigation } from '@react-navigation/native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 
 export default function Details() {
   const router = useRouter();
->>>>>>> 5be64e936e31474ff7a049bc040b2bba06801258
+  const navigation = useNavigation();
   const { width } = useWindowDimensions();
   const isSmall = width < 768;
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.mainContent}>
-        {/* Top Bar (no sidebar/back button) */}
-        <View style={[styles.topBar, isSmall && styles.topBarMobile]}>
-          <View style={styles.topBarLeft}>
-            <View style={styles.userCircle}>
-              <MaterialIcons name="person" size={20} color="#fff" />
+      <ScrollView contentContainerStyle={styles.container}>
+        <LinearGradient colors={["#e53935", "#ff7043"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.header}>
+          <View style={styles.headerTop}>
+            <View style={styles.headerLeft}>
+              <View style={styles.userCircle}>
+                <MaterialIcons name="person" size={20} color="#fff" />
+              </View>
+              {!isSmall && <Text style={styles.headerGreeting}>Welcome back</Text>}
             </View>
-            {!isSmall && <Text style={styles.userName}>Yover Nullo</Text>}
           </View>
-          <View style={[styles.searchContainer, isSmall && styles.searchContainerMobile]}>
-            <MaterialIcons name="search" size={20} color="#888" />
-            <Text style={styles.searchText}>Quick search</Text>
+          <View style={[styles.searchBar, isSmall && styles.searchBarMobile]}>
+            <MaterialIcons name="search" size={20} color="#fff" />
+            <Text style={styles.searchPlaceholder}>Search users, reports, cases...</Text>
           </View>
-<<<<<<< HEAD
-          <TouchableOpacity style={styles.addUserButton}>
-=======
-          <TouchableOpacity style={styles.addUserButton} onPress={() => router.push('/screens/login/AddUser')}>
->>>>>>> 5be64e936e31474ff7a049bc040b2bba06801258
-            <Text style={styles.addUserButtonText}>+ Add User</Text>
-          </TouchableOpacity>
+        </LinearGradient>
+
+        <View style={styles.statsRow}>
+          <StatCard icon="groups" label="Active Staff" value="24" color="#1e88e5" />
+          <StatCard icon="assignment" label="Open Cases" value="5" color="#fb8c00" />
+          <StatCard icon="event-busy" label="Overdue" value="2" color="#e53935" />
         </View>
 
-        {/* Dashboard Cards */}
-        <ScrollView contentContainerStyle={[styles.dashboardScroll, isSmall && styles.dashboardScrollMobile]}>
-          <View style={[styles.dashboardRow, isSmall && styles.dashboardRowMobile]}>
-            {/* Reports Card */}
-            <View style={[styles.cardLarge, isSmall && styles.cardFullWidth]}>
-              <Text style={styles.cardTitle}>Reports</Text>
-              <Text style={styles.cardSubtitle}>Employees</Text>
-              {/* Chart with navigation arrows */}
-              <View style={styles.chartContainer}>
-                <TouchableOpacity style={styles.chartArrow}>
-                  <MaterialIcons name="chevron-left" size={24} color="#ccc" />
-                </TouchableOpacity>
-                <View style={[styles.chartArea, isSmall && styles.chartAreaMobile]}>
-                  <Text style={styles.chartText}>[Area Chart: 2016-2019]</Text>
-                  <View style={styles.chartLegendRow}>
-                    <ChartLegend color="#ff9800" label="Campo" />
-                    <ChartLegend color="#4caf50" label="Poblacion" />
-                    <ChartLegend color="#7c4dff" label="San Francisco" />
-                  </View>
-                </View>
-                <TouchableOpacity style={styles.chartArrow}>
-                  <MaterialIcons name="chevron-right" size={24} color="#ccc" />
-                </TouchableOpacity>
-              </View>
-              <View style={styles.paginationDots}>
-                <View style={styles.dot} />
-                <View style={styles.dot} />
-                <View style={styles.dot} />
-              </View>
-            </View>
-            {/* Statistics Card */}
-            <View style={[styles.cardLarge, isSmall && styles.cardFullWidth]}>
-              <Text style={styles.cardTitle}>Statistics</Text>
-              {/* Donut chart with navigation */}
-              <View style={styles.chartContainer}>
-                <TouchableOpacity style={styles.chartArrow}>
-                  <MaterialIcons name="chevron-left" size={24} color="#ccc" />
-                </TouchableOpacity>
-                <View style={[styles.donutChartArea, isSmall && styles.donutChartAreaMobile]}>
-                  <Text style={styles.chartText}>[Donut Chart]</Text>
-                  <Text style={styles.chartLabel}>By emergency type</Text>
-                  <View style={styles.statsLegendWrap}>
-                    <ChartLegend color="#e53935" label="Accident" />
-                    <ChartLegend color="#ffb300" label="Medical" />
-                    <ChartLegend color="#8bc34a" label="Assault" />
-                    <ChartLegend color="#00bcd4" label="Float" />
-                    <ChartLegend color="#7c4dff" label="Earthquake" />
-                    <ChartLegend color="#ff4081" label="Fire" />
-                    <ChartLegend color="#607d8b" label="Robbery" />
-                  </View>
-                </View>
-                <TouchableOpacity style={styles.chartArrow}>
-                  <MaterialIcons name="chevron-right" size={24} color="#ccc" />
-                </TouchableOpacity>
-              </View>
-              <View style={styles.paginationDots}>
-                <View style={styles.dot} />
-                <View style={styles.dot} />
-                <View style={styles.dot} />
-              </View>
-            </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Recent Activity</Text>
+          <View style={styles.list}>
+            <ListItem icon="warning-amber" title="Case escalated" subtitle="Landslide • Poblacion" color="#e53935" />
+            <ListItem icon="support-agent" title="Responder assigned" subtitle="Fire • Campo" color="#1e88e5" />
+            <ListItem icon="check-circle" title="Case closed" subtitle="Accident • Cabugao" color="#43a047" />
           </View>
-          <View style={[styles.dashboardRow, isSmall && styles.dashboardRowMobile]}>
-            {/* New Reports Card */}
-            <View style={[styles.cardSmall, isSmall && styles.cardFullWidth]}>
-              <Text style={styles.cardTitle}>New Reports</Text>
-              <View style={styles.emptyStateBox}>
-                <Text style={styles.emptyStateText}>There are no reports yet</Text>
-              </View>
-            </View>
-            {/* Pending Cases Card */}
-            <View style={[styles.cardSmall, isSmall && styles.cardFullWidth]}>
-              <Text style={styles.cardTitle}>Pending Cases</Text>
-              <View style={styles.emptyStateBox}>
-                <Text style={styles.emptyStateText}>There are no action items assigned.</Text>
-              </View>
-            </View>
+        </View>
+
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Quick Actions</Text>
+          <View style={styles.actionsRow}>
+            <ActionButton icon="person" label="User Account" color="red" onPress={() => router.push('/screens/login/UserAccount')} />
+            <ActionButton icon="person-add" label="Add User" color="#00c853" onPress={() => router.push('/screens/login/AddUser')} />
+            <ActionButton icon="analytics" label="Reports" color="#1e88e5" onPress={() => {}} />
           </View>
-        </ScrollView>
-      </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
-function ChartLegend({ color, label }: { color: string; label: string }) {
+function StatCard({ icon, label, value, color }: { icon: any; label: string; value: string; color: string }) {
   return (
-    <View style={styles.legendItem}>
-      <View style={[styles.legendColor, { backgroundColor: color }]} />
-      <Text style={styles.legendLabel}>{label}</Text>
+    <View style={styles.statCard}>
+      <View style={[styles.iconPill, { backgroundColor: '#f7f7f7' }]}> 
+        <MaterialIcons name={icon} size={18} color={color} />
+      </View>
+      <Text style={styles.statValue}>{value}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
     </View>
+  );
+}
+
+function ListItem({ icon, title, subtitle, color }: { icon: any; title: string; subtitle: string; color: string }) {
+  return (
+    <View style={styles.listItem}>
+      <View style={[styles.iconPill, { backgroundColor: '#fff3f3' }]}> 
+        <MaterialIcons name={icon} size={18} color={color} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.listTitle}>{title}</Text>
+        <Text style={styles.listSubtitle}>{subtitle}</Text>
+      </View>
+      <MaterialIcons name="chevron-right" size={22} color="#bbb" />
+    </View>
+  );
+}
+
+function ActionButton({ icon, label, color, onPress }: { icon: any; label: string; color: string; onPress: () => void }) {
+  return (
+    <TouchableOpacity style={styles.actionButton} onPress={onPress} activeOpacity={0.8}>
+      <View style={[styles.iconPill, { backgroundColor: '#f7f7f7' }]}>
+        <MaterialIcons name={icon} size={18} color={color} />
+      </View>
+      <Text style={styles.actionLabel}>{label}</Text>
+    </TouchableOpacity>
   );
 }
 
@@ -134,29 +98,24 @@ const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: '#f7f7f7',
+     paddingTop: StatusBar.currentHeight || 0,
   },
-  // Main Content only (no sidebar)
-  mainContent: {
-    flex: 1,
-    padding: 0,
-    backgroundColor: '#f7f7f7',
-    paddingTop: StatusBar.currentHeight || 0,
+  container: {
+    paddingBottom: 24,
   },
-  topBar: {
-    height: 64,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+  header: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderBottomLeftRadius: 16,
+    borderBottomRightRadius: 16,
+  },
+  headerTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
+    marginBottom: 12,
   },
-  topBarMobile: {
-    paddingHorizontal: 12,
-    height: 56,
-  },
-  topBarLeft: {
+  headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -164,196 +123,126 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#e53935',
+    backgroundColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
   },
-  userName: {
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#222',
-  },
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    flex: 1,
-    marginHorizontal: 16,
-  },
-  searchContainerMobile: {
-    marginHorizontal: 8,
-    paddingHorizontal: 12,
-  },
-  searchText: {
-    marginLeft: 8,
-    color: '#888',
-    fontSize: 14,
-  },
-  addUserButton: {
-    backgroundColor: '#00c853',
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  addUserButtonText: {
+  headerGreeting: {
     color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
+    fontWeight: '700',
   },
-  dashboardScroll: {
-    padding: 24,
-    paddingTop: 16,
-  },
-  dashboardScrollMobile: {
-    padding: 12,
-    paddingTop: 12,
-  },
-  dashboardRow: {
+  addUserPill: {
     flexDirection: 'row',
-    marginBottom: 24,
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 999,
+  },
+  addUserPillText: {
+    color: '#fff',
+    fontWeight: '700',
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  searchBarMobile: {
+    paddingVertical: 8,
+  },
+  searchPlaceholder: {
+    color: '#fff',
+    opacity: 0.9,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    paddingHorizontal: 16,
+    marginTop: -16,
+    gap: 12,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 16,
     alignItems: 'flex-start',
-  },
-  dashboardRowMobile: {
-    flexDirection: 'column',
-  },
-  cardLarge: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
-    marginRight: 24,
-    minWidth: 320,
-    maxWidth: 400,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
     shadowRadius: 8,
   },
-  cardSmall: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
-    marginRight: 24,
-    minWidth: 320,
-    maxWidth: 400,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
+  iconPill: {
+    padding: 8,
+    borderRadius: 999,
+    marginBottom: 10,
   },
-  cardFullWidth: {
-    width: '100%',
-    maxWidth: '100%',
-    marginRight: 0,
-    marginBottom: 16,
-  },
-  cardTitle: {
-    fontWeight: 'bold',
-    fontSize: 18,
-    marginBottom: 4,
+  statValue: {
+    fontSize: 20,
+    fontWeight: '700',
     color: '#222',
   },
-  cardSubtitle: {
-    color: '#888',
-    fontSize: 14,
-    marginBottom: 16,
+  statLabel: {
+    color: '#777',
+    marginTop: 2,
   },
-  chartContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
+  section: {
+    marginTop: 16,
+    paddingHorizontal: 16,
   },
-  chartArrow: {
-    padding: 8,
-  },
-  chartArea: {
-    flex: 1,
-    height: 120,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  chartAreaMobile: {
-    height: 140,
-  },
-  donutChartArea: {
-    flex: 1,
-    height: 120,
-    backgroundColor: '#f5f5f5',
-    borderRadius: 60,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  donutChartAreaMobile: {
-    height: 160,
-    borderRadius: 80,
-  },
-  chartText: {
-    color: '#bbb',
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  chartLabel: {
-    color: '#888',
-    fontSize: 12,
+  sectionTitle: {
+    color: '#222',
+    fontWeight: '700',
     marginBottom: 8,
   },
-  chartLegendRow: {
-    flexDirection: 'row',
-    marginTop: 8,
-    justifyContent: 'center',
-    flexWrap: 'wrap',
+  list: {
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    overflow: 'hidden',
   },
-  statsLegendWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    marginTop: 8,
-    justifyContent: 'center',
-  },
-  legendItem: {
+  listItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginRight: 12,
-    marginBottom: 4,
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f2f2f2',
   },
-  legendColor: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    marginRight: 6,
+  listTitle: {
+    color: '#222',
+    fontWeight: '600',
   },
-  legendLabel: {
-    fontSize: 13,
-    color: '#555',
+  listSubtitle: {
+    color: '#777',
+    fontSize: 12,
   },
-  paginationDots: {
+  actionsRow: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 8,
+    gap: 12,
   },
-  dot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#ddd',
-    marginHorizontal: 2,
-  },
-  emptyStateBox: {
+  actionButton: {
     flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 14,
     alignItems: 'center',
-    justifyContent: 'center',
-    height: 80,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 8,
   },
-  emptyStateText: {
-    color: '#bbb',
-    fontSize: 15,
+  actionLabel: {
+    marginTop: 6,
+    color: '#222',
+    fontWeight: '600',
   },
 });

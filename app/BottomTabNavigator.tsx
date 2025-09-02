@@ -1,21 +1,22 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, User, type Auth } from 'firebase/auth';
 import React, { useEffect, useState } from 'react';
 import Details from '../components/Details';
 import Profile from '../components/Profile';
 import SendAlarm from '../components/SendAlarm';
 import LoginScreen from './screens/login/LoginScreen';
-import { auth } from './services/firebaseConfig';
+import { app } from './services/firebaseConfig';
 
 const Tab = createBottomTabNavigator();
 
 export default function BottomTabNavigator() {
+  const authRef: Auth = getAuth(app);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(authRef, (user) => {
       setUser(user);
       setLoading(false);
     });
