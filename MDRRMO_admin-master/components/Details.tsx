@@ -1,15 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
-<<<<<<< HEAD
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 
 export default function Details() {
-=======
-import { useRouter } from 'expo-router';
-import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
-
-export default function Details() {
-  const router = useRouter();
->>>>>>> 5be64e936e31474ff7a049bc040b2bba06801258
   const { width } = useWindowDimensions();
   const isSmall = width < 768;
 
@@ -28,11 +20,7 @@ export default function Details() {
             <MaterialIcons name="search" size={20} color="#888" />
             <Text style={styles.searchText}>Quick search</Text>
           </View>
-<<<<<<< HEAD
           <TouchableOpacity style={styles.addUserButton}>
-=======
-          <TouchableOpacity style={styles.addUserButton} onPress={() => router.push('/screens/login/AddUser')}>
->>>>>>> 5be64e936e31474ff7a049bc040b2bba06801258
             <Text style={styles.addUserButtonText}>+ Add User</Text>
           </TouchableOpacity>
         </View>
