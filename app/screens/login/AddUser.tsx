@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 export default function AddUser() {
@@ -19,7 +19,7 @@ export default function AddUser() {
     'Pautao',
     'Poblacion',
     'Pongtud',
-    'Santo Rosario',
+    'Santo Rosario you',
     'Cambuayon',
     'Payapag',
   ];
