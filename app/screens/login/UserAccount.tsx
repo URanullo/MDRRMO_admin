@@ -133,7 +133,7 @@ export default function UserAccount() {
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <Text style={styles.title}>yeye</Text>
+          <Text style={styles.title}>Account</Text>
         </View>
 
         {/* Quick Action section */}
