@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "extra": {
-      "baseUrl": "http://192.168.43.40:3000",
+      "baseUrl": "https://firebase-admin-auth-234s.onrender.com",
       "eas": {
         "projectId": "baa9c7e7-a90b-474d-9479-3ab56009f85e"
       }
