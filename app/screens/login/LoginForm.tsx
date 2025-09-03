@@ -113,6 +113,7 @@ const styles = StyleSheet.create({
     logoContainer: {
         alignItems: 'center',
         marginBottom: 32,
+        marginTop: 32,
     },
     avatar: {
         backgroundColor: '#e53935',

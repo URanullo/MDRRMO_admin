@@ -4,7 +4,7 @@ import * as Notifications from 'expo-notifications';
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from 'firebase/firestore';
 import { useState } from 'react';
-import { Alert, Platform, StyleSheet } from "react-native";
+import {  Alert,KeyboardAvoidingView, Platform, ScrollView, StyleSheet} from "react-native";
 import { auth, db } from "../../../app/services/firebaseConfig"; // Adjust the import path as needed
 import LoginForm from './LoginForm';
 
@@ -84,7 +84,15 @@ export default function LoginScreen() {
     };
 
     return (
-        <LoginForm onSubmit={handleLogin} isLoading={isLoading} />
+          <KeyboardAvoidingView
+              style={{ flex: 1, backgroundColor: '#fff' }}
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}  >
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}>
+            <LoginForm onSubmit={handleLogin} isLoading={isLoading} />
+        </ScrollView>
+        </KeyboardAvoidingView>
     );
 }
 
