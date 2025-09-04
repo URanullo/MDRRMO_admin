@@ -10,12 +10,30 @@ export default function Profile() {
   const user = typedAuth.currentUser as User | null;
 
   const handleLogout = async () => {
-    try {
-      await signOut(typedAuth);
-      // User will be redirected to LoginScreen by your auth logic in BottomTabNavigator
-    } catch (error: any) {
-      Alert.alert('Logout Failed', error?.message || 'Please try again.');
-    }
+     Alert.alert(
+        "Confirm",
+        "Are you sure you want to log out?",
+        [
+          {
+            text: "Cancel",
+            onPress: () => console.log("Logout canceled"),
+            style: "cancel"
+          },
+          {
+            text: "Logout",
+            onPress: async () => {
+              try {
+                await signOut(typedAuth);
+                console.log("User signed out successfully");
+              } catch (e: any) {
+                Alert.alert("Logout Error", e.message);
+              }
+            },
+            style: "destructive"
+          }
+        ],
+        { cancelable: true }
+      );
   };
 
   return (

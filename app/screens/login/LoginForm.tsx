@@ -13,7 +13,6 @@ export default function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [hasCheckedAuth, setHasCheckedAuth] = useState(false);
-    const [isSignUp, setIsSignUp] = useState(false);
 
     return (
         <SafeAreaView style={styles.container}>
@@ -65,13 +64,8 @@ export default function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
                     ]}
                     onPress={() => {
                         if (email.trim() && password) {
-                            if (isSignUp) {
-                                console.log('Calling handleSignUp...');
-                                // handleSignUp();
-                            } else {
-                                console.log('Calling handleLogin...');
-                                onSubmit(email, password, isLoading);
-                            }
+                            console.log('Calling handleLogin...');
+                            onSubmit(email, password, isLoading);
                         } else {
                             console.log('Form validation failed');
                             Alert.alert('Error', 'Please enter both email and password');
@@ -81,20 +75,7 @@ export default function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
                     android_disableSound={false}
                 >
                     <Text style={styles.loginButtonText}>
-                        {isLoading ? (isSignUp ? "CREATING ACCOUNT..." : "LOGGING IN...") : (isSignUp ? "SIGN UP" : "LOG IN")}
-                    </Text>
-                </Pressable>
-                <Pressable>
-                    <Text style={styles.forgot}>Forgot password?</Text>
-                </Pressable>
-
-                {/* Toggle between Login and Sign Up */}
-                <Pressable
-                    style={styles.toggleButton}
-                    onPress={() => setIsSignUp(!isSignUp)}
-                >
-                    <Text style={styles.toggleButtonText}>
-                        {isSignUp ? "Already have an account? Log In" : "Don't have an account? Sign Up"}
+                        {isLoading ? ("LOGGING IN...") : ("LOG IN")}
                     </Text>
                 </Pressable>
             </View>
