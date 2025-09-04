@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-export default function SendAlarm() {
+export default function SendAlarmScreen() {
   const [alarmType, setAlarmType] = useState('');
   const [alarmLevel, setAlarmLevel] = useState('');
   const [targetBarangay, setTargetBarangay] = useState('');

@@ -1,9 +1,9 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native'; // Added ActivityIndicator
-import handleCreateUserInFirebase, { UserProfile } from "../../services/handleCreateUserInFirebase";
+import handleCreateUserInFirebase, { UserProfile } from "../../screens/add_user/handleCreateUserInFirebase";
 
-export default function AddUser() {
+export default function AddUserScreen() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -143,22 +143,15 @@ export default function AddUser() {
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Select Barangay</Text>
               <ScrollView style={{ maxHeight: 300 }}>
-                {BARANGAYS.map((b) => (
-                  <TouchableOpacity
-                    key={b}
-                    style={[styles.optionItem, barangay === b && styles.optionItemSelected]}
-                    onPress={() => {
-                      setBarangay(b);
-                      setIsBarangayModalVisible(false);
-                    }}
-                  >
+                {BARANGAYS.map(b => (
+                  <TouchableOpacity key={b} style={styles.optionItem} onPress={() => { setBarangay(b); setIsBarangayModalVisible(false); }}>
                     <Text style={styles.optionText}>{b}</Text>
                   </TouchableOpacity>
                 ))}
               </ScrollView>
-              <View style={styles.modalActions}>
-                <TouchableOpacity style={styles.cancelButton} onPress={() => setIsBarangayModalVisible(false)}>
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
+            <View style={styles.modalActions}>
+                <TouchableOpacity onPress={() => setIsBarangayModalVisible(false)} style={styles.cancelButton}>
+                  <Text style={styles.cancelButtonText}>Close</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -296,20 +289,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontSize: 16,
   },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    width: '100%',
-    maxWidth: 400,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    padding: 20,
-  },
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.35)',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 20,
+    },
+    modalContent: {
+      width: '100%',
+      backgroundColor: '#fff',
+      borderRadius: 12,
+      padding: 16,
+    },
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
@@ -343,13 +335,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#6c757d',
   },
   cancelButtonText: {
-    color: '#fff',
-    fontWeight: '600',
-    fontSize: 15,
+     color: '#333',
+     fontWeight: '600',
   },
   disabled: {
       opacity: 0.5,
       backgroundColor: '#e9ecef'
-  }
+  },
+  modalCancelText: {
+      color: '#e53935',
+      fontWeight: '700',
+    },
 });
 

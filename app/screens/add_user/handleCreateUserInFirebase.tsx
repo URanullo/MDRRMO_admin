@@ -1,6 +1,6 @@
 import { createUserWithEmailAndPassword, User } from 'firebase/auth';
 import { doc, setDoc, Timestamp } from 'firebase/firestore';
-import { auth, db } from '../services/firebaseConfig';
+import { auth, db } from '../../services/firebaseConfig';
 import { Alert } from 'react-native';
 
 export interface UserProfile {

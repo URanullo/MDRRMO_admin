@@ -14,7 +14,7 @@ type UserRecord = {
   createdAt?: any;
 };
 
-export default function UserAccount() {
+export default function UserListScreen() {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [search, setSearch] = useState<string>('');

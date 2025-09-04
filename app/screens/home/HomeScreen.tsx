@@ -4,7 +4,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 
-export default function Details() {
+export default function HomeScreen() {
   const router = useRouter();
   const navigation = useNavigation();
   const { width } = useWindowDimensions();
@@ -46,8 +46,8 @@ export default function Details() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.actionsRow}>
-            <ActionButton icon="person" label="User Account" color="red" onPress={() => router.push('/screens/login/UserAccount')} />
-            <ActionButton icon="person-add" label="Add User" color="#00c853" onPress={() => router.push('/screens/login/AddUser')} />
+            <ActionButton icon="person" label="User Account" color="red" onPress={() => router.push('/screens/user_list/UserListScreen')} />
+            <ActionButton icon="person-add" label="Add User" color="#00c853" onPress={() => router.push('/screens/add_user/AddUserScreen')} />
             <ActionButton icon="analytics" label="Reports" color="#1e88e5" onPress={() => {}} />
           </View>
         </View>
@@ -59,7 +59,7 @@ export default function Details() {
 function StatCard({ icon, label, value, color }: { icon: any; label: string; value: string; color: string }) {
   return (
     <View style={styles.statCard}>
-      <View style={[styles.iconPill, { backgroundColor: '#f7f7f7' }]}> 
+      <View style={[styles.iconPill, { backgroundColor: '#f7f7f7' }]}>
         <MaterialIcons name={icon} size={18} color={color} />
       </View>
       <Text style={styles.statValue}>{value}</Text>
@@ -71,7 +71,7 @@ function StatCard({ icon, label, value, color }: { icon: any; label: string; val
 function ListItem({ icon, title, subtitle, color }: { icon: any; title: string; subtitle: string; color: string }) {
   return (
     <View style={styles.listItem}>
-      <View style={[styles.iconPill, { backgroundColor: '#fff3f3' }]}> 
+      <View style={[styles.iconPill, { backgroundColor: '#fff3f3' }]}>
         <MaterialIcons name={icon} size={18} color={color} />
       </View>
       <View style={{ flex: 1 }}>

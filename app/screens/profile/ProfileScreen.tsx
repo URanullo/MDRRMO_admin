@@ -3,9 +3,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Auth, signOut, User } from 'firebase/auth';
 import React from 'react';
 import { Alert, Image, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import * as FirebaseConfig from '../app/services/firebaseConfig';
+import * as FirebaseConfig from '../../../app/services/firebaseConfig';
 
-export default function Profile() {
+export default function ProfileScreen() {
   const typedAuth = (FirebaseConfig as any).auth as Auth;
   const user = typedAuth.currentUser as User | null;
 
@@ -98,7 +98,7 @@ export default function Profile() {
               <MaterialIcons name="chevron-right" size={22} color="#bbb" />
             </TouchableOpacity>
 
-            
+
           </View>
         </View>
 
