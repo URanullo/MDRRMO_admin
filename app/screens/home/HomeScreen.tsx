@@ -1,14 +1,21 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
+import { useMemo, useState } from 'react';
+import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View, useWindowDimensions } from "react-native";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const navigation = useNavigation();
   const { width } = useWindowDimensions();
   const isSmall = width < 768;
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const greeting = useMemo(() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -19,12 +26,29 @@ export default function HomeScreen() {
               <View style={styles.userCircle}>
                 <MaterialIcons name="person" size={20} color="#fff" />
               </View>
-              {!isSmall && <Text style={styles.headerGreeting}>Welcome back</Text>}
+              {!isSmall && (
+                <View>
+                  <Text style={styles.headerGreeting}>{greeting}</Text>
+                  <Text style={styles.headerSubGreeting}>Welcome back</Text>
+                </View>
+              )}
             </View>
           </View>
           <View style={[styles.searchBar, isSmall && styles.searchBarMobile]}>
             <MaterialIcons name="search" size={20} color="#fff" />
-            <Text style={styles.searchPlaceholder}>Search users, reports, cases...</Text>
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Search users, reports, cases..."
+              placeholderTextColor="rgba(255,255,255,0.9)"
+              style={styles.searchInput}
+              returnKeyType="search"
+            />
+            {!!searchQuery && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                <MaterialIcons name="close" size={18} color="#fff" />
+              </TouchableOpacity>
+            )}
           </View>
         </LinearGradient>
 
@@ -46,11 +70,13 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.actionsRow}>
-            <ActionButton icon="person" label="User Account" color="red" onPress={() => router.push('/screens/user_list/UserListScreen')} />
+            <ActionButton icon="person" label="User Accounts" color="#e53935" onPress={() => router.push('/screens/user_list/UserListScreen')} />
             <ActionButton icon="person-add" label="Add User" color="#00c853" onPress={() => router.push('/screens/add_user/AddUserScreen')} />
-            <ActionButton icon="analytics" label="Reports" color="#1e88e5" onPress={() => {}} />
           </View>
         </View>
+
+        <TouchableOpacity style={styles.fab} onPress={() => router.push('/screens/send_alarm/SendAlarmScreen')} activeOpacity={0.9}>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -59,11 +85,14 @@ export default function HomeScreen() {
 function StatCard({ icon, label, value, color }: { icon: any; label: string; value: string; color: string }) {
   return (
     <View style={styles.statCard}>
-      <View style={[styles.iconPill, { backgroundColor: '#f7f7f7' }]}>
+      <View style={[styles.iconPill, { backgroundColor: '#f7f7f7' }]}> 
         <MaterialIcons name={icon} size={18} color={color} />
       </View>
       <Text style={styles.statValue}>{value}</Text>
       <Text style={styles.statLabel}>{label}</Text>
+      <View style={styles.progressTrack}>
+        <View style={[styles.progressFill, { backgroundColor: color, width: '60%' }]} />
+      </View>
     </View>
   );
 }
@@ -85,11 +114,13 @@ function ListItem({ icon, title, subtitle, color }: { icon: any; title: string; 
 
 function ActionButton({ icon, label, color, onPress }: { icon: any; label: string; color: string; onPress: () => void }) {
   return (
-    <TouchableOpacity style={styles.actionButton} onPress={onPress} activeOpacity={0.8}>
-      <View style={[styles.iconPill, { backgroundColor: '#f7f7f7' }]}>
-        <MaterialIcons name={icon} size={18} color={color} />
-      </View>
-      <Text style={styles.actionLabel}>{label}</Text>
+    <TouchableOpacity style={styles.actionButton} onPress={onPress} activeOpacity={0.85}>
+      <LinearGradient colors={[color, '#333']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.actionGradient}>
+        <View style={[styles.iconPill, { backgroundColor: 'rgba(255,255,255,0.2)', marginBottom: 0 }]}> 
+          <MaterialIcons name={icon} size={18} color="#fff" />
+        </View>
+        <Text style={[styles.actionLabel, { color: '#fff' }]}>{label}</Text>
+      </LinearGradient>
     </TouchableOpacity>
   );
 }
@@ -132,6 +163,11 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '700',
   },
+  headerSubGreeting: {
+    color: '#fff',
+    opacity: 0.85,
+    fontSize: 12,
+  },
   addUserPill: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -157,9 +193,10 @@ const styles = StyleSheet.create({
   searchBarMobile: {
     paddingVertical: 8,
   },
-  searchPlaceholder: {
+  searchInput: {
+    flex: 1,
     color: '#fff',
-    opacity: 0.9,
+    paddingVertical: 6,
   },
   statsRow: {
     flexDirection: 'row',
@@ -192,6 +229,18 @@ const styles = StyleSheet.create({
   statLabel: {
     color: '#777',
     marginTop: 2,
+  },
+  progressTrack: {
+    marginTop: 10,
+    height: 6,
+    width: '100%',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 999,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 999,
   },
   section: {
     marginTop: 16,
@@ -230,19 +279,41 @@ const styles = StyleSheet.create({
   },
   actionButton: {
     flex: 1,
-    backgroundColor: '#fff',
     borderRadius: 14,
+    overflow: 'hidden',
+  },
+  actionGradient: {
     padding: 14,
     alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
+    justifyContent: 'center',
+    gap: 8,
   },
   actionLabel: {
-    marginTop: 6,
-    color: '#222',
+    marginTop: 2,
     fontWeight: '600',
+  },
+  fab: {
+    position: 'absolute',
+    right: 16,
+    bottom: 24,
+    borderRadius: 999,
+    overflow: 'hidden',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+  },
+  fabInner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 999,
+  },
+  fabText: {
+    color: '#fff',
+    fontWeight: '700',
   },
 });

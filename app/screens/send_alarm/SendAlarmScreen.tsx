@@ -38,7 +38,7 @@ export default function SendAlarmScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>🚨 Send Emergency Alarm</Text>
+        <Text style={styles.title}></Text>
 
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Alarm Type</Text>
