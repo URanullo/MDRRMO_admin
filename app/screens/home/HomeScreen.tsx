@@ -53,18 +53,7 @@ export default function HomeScreen() {
         </LinearGradient>
 
         <View style={styles.statsRow}>
-          <StatCard icon="groups" label="Active Staff" value="24" color="#1e88e5" />
           <StatCard icon="assignment" label="Open Cases" value="5" color="#fb8c00" />
-          <StatCard icon="event-busy" label="Overdue" value="2" color="#e53935" />
-        </View>
-
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Recent Activity</Text>
-          <View style={styles.list}>
-            <ListItem icon="warning-amber" title="Case escalated" subtitle="Landslide • Poblacion" color="#e53935" />
-            <ListItem icon="support-agent" title="Responder assigned" subtitle="Fire • Campo" color="#1e88e5" />
-            <ListItem icon="check-circle" title="Case closed" subtitle="Accident • Cabugao" color="#43a047" />
-          </View>
         </View>
 
         <View style={styles.section}>
@@ -72,6 +61,7 @@ export default function HomeScreen() {
           <View style={styles.actionsRow}>
             <ActionButton icon="person" label="User Accounts" color="#e53935" onPress={() => router.push('/screens/user_list/UserListScreen')} />
             <ActionButton icon="person-add" label="Add User" color="#00c853" onPress={() => router.push('/screens/add_user/AddUserScreen')} />
+            <ActionButton icon="history" label="Emergency History" color="#ff9800" onPress={() => router.push('/screens/home/EmergencyHistory')} />
           </View>
         </View>
 

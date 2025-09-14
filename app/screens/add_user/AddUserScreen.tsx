@@ -1,10 +1,9 @@
-import { useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, ActivityIndicator } from 'react-native'; // Added ActivityIndicator
+import { ActivityIndicator, Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native'; // Added ActivityIndicator
 import handleCreateUserInFirebase, { UserProfile } from "../../screens/add_user/handleCreateUserInFirebase";
 
 export default function AddUserScreen() {
-  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [barangay, setBarangay] = useState('');
@@ -13,6 +12,7 @@ export default function AddUserScreen() {
   const [contactNumber, setContactNumber] = useState('');
   const [isBarangayModalVisible, setIsBarangayModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false); // For loading state
+  const [isAdmin, setIsAdmin] = useState(false); // Role selection state
 
   const BARANGAYS = [
     'Cabugao', 'Campo', 'Dugsangon', 'Pautao', 'Poblacion',
@@ -42,7 +42,7 @@ export default function AddUserScreen() {
       lastName: lastName.trim(),
       barangay: barangay,
       contactNumber: contactNumber.trim(),
-      role: 'user', // Or 'admin', or make this selectable on the form
+      role: isAdmin ? 'admin' : 'user',
     };
 
     const detailsSummary =
@@ -50,7 +50,8 @@ export default function AddUserScreen() {
       `Barangay: ${barangay}\n` +
       `First Name: ${firstName}\n` +
       `Last Name: ${lastName}\n` +
-      `Contact No: ${contactNumber || '-'}`;
+      `Contact No: ${contactNumber || '-'}\n` +
+      `Role: ${isAdmin ? 'Admin' : 'User'}`;
 
     Alert.alert(
       'Confirm New User Details',
@@ -78,6 +79,7 @@ export default function AddUserScreen() {
               setFirstName('');
               setLastName('');
               setContactNumber('');
+              setIsAdmin(false);
 //               router.back(); // Or router.push('/users-list') or similar
             } else {
               console.log('Failed to create user from AddUser screen.');
@@ -194,7 +196,22 @@ export default function AddUserScreen() {
           />
         </View>
 
-        {/* You could add a Role selection field here if needed */}
+        <View style={styles.fieldGroup}>
+          <Text style={styles.label}>User Role</Text>
+          <TouchableOpacity
+            style={[styles.checkboxContainer, isLoading && styles.disabled]}
+            onPress={() => !isLoading && setIsAdmin(!isAdmin)}
+            activeOpacity={0.7}
+            disabled={isLoading}
+          >
+            <View style={[styles.checkbox, isAdmin && styles.checkboxChecked]}>
+              {isAdmin && <MaterialIcons name="check" size={16} color="#fff" />}
+            </View>
+            <View style={styles.checkboxTextContainer}>
+              <Text style={styles.checkboxLabel}>Admin User</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
 
         <TouchableOpacity
           style={[styles.saveButton, isLoading && styles.saveButtonLoading]}
@@ -346,5 +363,39 @@ const styles = StyleSheet.create({
       color: '#e53935',
       fontWeight: '700',
     },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: 8,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#d0d0d0',
+    borderRadius: 4,
+    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  checkboxChecked: {
+    backgroundColor: '#00c853',
+    borderColor: '#00c853',
+  },
+  checkboxTextContainer: {
+    flex: 1,
+  },
+  checkboxLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#222',
+    marginBottom: 2,
+  },
+  checkboxDescription: {
+    fontSize: 13,
+    color: '#666',
+    lineHeight: 18,
+  },
 });
 
