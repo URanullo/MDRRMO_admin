@@ -11,6 +11,7 @@ type UserRecord = {
   lastName?: string;
   barangay?: string;
   contactNumber?: string;
+  role?: string;
   createdAt?: any;
 };
 
@@ -26,6 +27,7 @@ export default function UserListScreen() {
   const [editLastName, setEditLastName] = useState<string>('');
   const [editBarangay, setEditBarangay] = useState<string>('');
   const [editContactNumber, setEditContactNumber] = useState<string>('');
+  const [editIsAdmin, setEditIsAdmin] = useState<boolean>(false);
 
   useEffect(() => {
     const q = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
@@ -53,6 +55,7 @@ export default function UserListScreen() {
     setEditLastName(user.lastName || '');
     setEditBarangay(user.barangay || '');
     setEditContactNumber(user.contactNumber || '');
+    setEditIsAdmin(user.role === 'admin');
     setIsEditOpen(true);
   };
 
@@ -66,6 +69,7 @@ export default function UserListScreen() {
         lastName: editLastName || null,
         barangay: editBarangay || null,
         contactNumber: editContactNumber || null,
+        role: editIsAdmin ? 'admin' : 'user',
       });
       setIsEditOpen(false);
       setEditingUser(null);
@@ -101,7 +105,14 @@ export default function UserListScreen() {
             <MaterialIcons name="person" size={22} color="#fff" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.name}>{`${item.firstName || ''} ${item.lastName || ''}`.trim() || 'Unnamed User'}</Text>
+            <View style={styles.nameRow}>
+              <Text style={styles.name}>{`${item.firstName || ''} ${item.lastName || ''}`.trim() || 'Unnamed User'}</Text>
+              {item.role && (
+                <View style={[styles.roleBadge, { backgroundColor: item.role === 'admin' ? '#e53935' : '#4caf50' }]}>
+                  <Text style={styles.roleText}>{item.role === 'admin' ? 'Admin' : 'User'}</Text>
+                </View>
+              )}
+            </View>
             {!!item.email && <Text style={styles.email}>{item.email}</Text>}
           </View>
           <TouchableOpacity style={styles.iconBtn} onPress={() => openEdit(item)}>
@@ -203,6 +214,22 @@ export default function UserListScreen() {
             <View style={styles.fieldGroup}>
               <Text style={styles.label}>Contact Number</Text>
               <TextInput style={styles.input} placeholder="Contact number" keyboardType="phone-pad" value={editContactNumber} onChangeText={setEditContactNumber} />
+            </View>
+            <View style={styles.fieldGroup}>
+              <Text style={styles.label}>User Role</Text>
+              <TouchableOpacity
+                style={styles.checkboxContainer}
+                onPress={() => setEditIsAdmin(!editIsAdmin)}
+                activeOpacity={0.7}
+              >
+                <View style={[styles.checkbox, editIsAdmin && styles.checkboxChecked]}>
+                  {editIsAdmin && <MaterialIcons name="check" size={16} color="#fff" />}
+                </View>
+                <View style={styles.checkboxTextContainer}>
+                  <Text style={styles.checkboxLabel}>Admin User</Text>
+                  <Text style={styles.checkboxDescription}>Grant administrative privileges to this user</Text>
+                </View>
+              </TouchableOpacity>
             </View>
             <View style={styles.actions}>
               <TouchableOpacity style={[styles.actionBtn, styles.cancelBtn]} onPress={() => setIsEditOpen(false)}>
@@ -389,6 +416,56 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontWeight: '700',
+  },
+  nameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  roleBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginLeft: 8,
+  },
+  roleText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: 8,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#d0d0d0',
+    borderRadius: 4,
+    marginRight: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#fff',
+  },
+  checkboxChecked: {
+    backgroundColor: '#00c853',
+    borderColor: '#00c853',
+  },
+  checkboxTextContainer: {
+    flex: 1,
+  },
+  checkboxLabel: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#222',
+    marginBottom: 2,
+  },
+  checkboxDescription: {
+    fontSize: 13,
+    color: '#666',
+    lineHeight: 18,
   },
 });
 
