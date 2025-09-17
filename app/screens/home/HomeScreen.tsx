@@ -61,7 +61,7 @@ export default function HomeScreen() {
           <View style={styles.actionsRow}>
             <ActionButton icon="person" label="User Accounts" color="#e53935" onPress={() => router.push('/screens/user_list/UserListScreen')} />
             <ActionButton icon="person-add" label="Add User" color="#00c853" onPress={() => router.push('/screens/add_user/AddUserScreen')} />
-            <ActionButton icon="history" label="Emergency History" color="#ff9800" onPress={() => router.push('/screens/home/EmergencyHistory')} />
+            <ActionButton icon="history" label="Emergency History" color="#ff9800" onPress={() => router.push('/screens/EmergencyListScreen/EmergencyHistory')} />
           </View>
         </View>
 
