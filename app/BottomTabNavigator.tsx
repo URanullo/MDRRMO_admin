@@ -1,13 +1,12 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { getAuth, onAuthStateChanged, User, type Auth } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
 import React, { useEffect, useState } from 'react';
 import HomeScreen from './screens/home/HomeScreen';
-import ProfileScreen from './screens/profile/ProfileScreen';
-import SendAlarmScreen from './screens/send_alarm/SendAlarmScreen';
 import LoginScreen from './screens/login/LoginScreen';
+import ProfileScreen from './screens/profile/ProfileScreen';
 import { app, db } from './services/firebaseConfig';
-import { doc, setDoc, getDoc } from 'firebase/firestore';
 
 
 const Tab = createBottomTabNavigator();
@@ -74,7 +73,6 @@ export default function BottomTabNavigator() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ headerShown: false, }}/>
-      <Tab.Screen name="Send Alarm" component={SendAlarmScreen} options={{ headerShown: false, }}/>
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false, }}/>
     </Tab.Navigator>
   );

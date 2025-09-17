@@ -23,7 +23,7 @@ export default function EmergencyHistory() {
   const [refreshing, setRefreshing] = useState(false);
 
   // Mock emergency data - in a real app, this would come from Firebase
-  const emergencyReports: EmergencyReport[] = [
+  const emergencyReports: EmergencyReport[] = useMemo(() => ([
     {
       id: '1',
       type: 'Fire',
@@ -96,7 +96,7 @@ export default function EmergencyHistory() {
       status: 'Resolved',
       priority: 'Medium'
     }
-  ];
+  ]), []);
 
   const filteredReports = useMemo(() => {
     return emergencyReports.filter(report => {
@@ -110,7 +110,7 @@ export default function EmergencyHistory() {
       
       return matchesSearch && matchesStatus;
     });
-  }, [searchQuery, statusFilter]);
+  }, [searchQuery, statusFilter, emergencyReports]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -339,16 +339,16 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 16,
     backgroundColor: '#fff',
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
   },
   searchInput: {
     flex: 1,
@@ -358,7 +358,7 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     backgroundColor: '#fff',
-    paddingVertical: 8,
+    paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#e0e0e0',
   },
@@ -367,8 +367,8 @@ const styles = StyleSheet.create({
   },
   filterButton: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    marginRight: 8,
+    paddingVertical: 10,
+    marginRight: 10,
     borderRadius: 20,
     backgroundColor: '#f5f5f5',
   },
@@ -390,28 +390,28 @@ const styles = StyleSheet.create({
   statsContainer: {
     flexDirection: 'row',
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginVertical: 16,
-    elevation: 2,
+    borderRadius: 14,
+    padding: 18,
+    marginVertical: 18,
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
   },
   statItem: {
     flex: 1,
     alignItems: 'center',
   },
   statNumber: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: '700',
     color: '#333',
   },
   statLabel: {
     fontSize: 12,
     color: '#666',
-    marginTop: 4,
+    marginTop: 6,
   },
   emptyState: {
     alignItems: 'center',
@@ -433,14 +433,14 @@ const styles = StyleSheet.create({
   },
   reportCard: {
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    elevation: 2,
+    borderRadius: 14,
+    padding: 18,
+    marginBottom: 14,
+    elevation: 3,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
   },
   reportHeader: {
     flexDirection: 'row',
@@ -454,9 +454,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   emergencyIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
