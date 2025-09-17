@@ -220,7 +220,7 @@ export default function EmergencyHistory() {
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
             <Text style={styles.statNumber}>{emergencyReports.length}</Text>
-            <Text style={styles.statLabel}>Total Reports</Text>
+            <Text style={styles.statLabel}>Total</Text>
           </View>
           <View style={styles.statItem}>
             <Text style={[styles.statNumber, { color: '#ff9800' }]}>
