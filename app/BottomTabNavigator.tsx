@@ -6,28 +6,57 @@ import HomeScreen from './screens/home/HomeScreen';
 import ProfileScreen from './screens/profile/ProfileScreen';
 import SendAlarmScreen from './screens/send_alarm/SendAlarmScreen';
 import LoginScreen from './screens/login/LoginScreen';
-import { app } from './services/firebaseConfig';
+import { app, db } from './services/firebaseConfig';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+
 
 const Tab = createBottomTabNavigator();
 
 export default function BottomTabNavigator() {
-  const authRef: Auth = getAuth(app);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+   const authRef: Auth = getAuth(app);
+    const [user, setUser] = useState<User | null>(null);
+    const [role, setRole] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(authRef, (user) => {
-      setUser(user);
-      setLoading(false);
-    });
-    return unsubscribe;
-  }, []);
+    useEffect(() => {
+      const unsubscribe = onAuthStateChanged(authRef, async (firebaseUser) => {
+        if (firebaseUser) {
+          setUser(firebaseUser);
 
-  if (loading) return null;
+          try {
+            const userDocRef = doc(db, "users", firebaseUser.uid);
+            const userDocSnap = await getDoc(userDocRef);
 
-  if (!user) {
-    return <LoginScreen />;
-  }
+            if (userDocSnap.exists()) {
+              const data = userDocSnap.data();
+              setRole(data.role || "user");
+            } else {
+              setRole("user");
+            }
+          } catch (error) {
+            console.error("Error fetching user role:", error);
+            setRole("user");
+          }
+        } else {
+          setUser(null);
+          setRole(null);
+        }
+
+        setLoading(false);
+      });
+
+      return unsubscribe;
+    }, []);
+
+    if (loading) return null;
+
+    if (!user) {
+      return <LoginScreen />;
+    }
+
+    if (role !== "admin") {
+      return <LoginScreen />;
+    }
 
   return (
     <Tab.Navigator

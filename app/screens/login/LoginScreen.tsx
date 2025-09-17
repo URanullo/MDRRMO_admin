@@ -2,10 +2,10 @@ import Constants from 'expo-constants';
 import * as Device from "expo-device";
 import * as Notifications from 'expo-notifications';
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useState } from 'react';
 import {  Alert,KeyboardAvoidingView, Platform, ScrollView, StyleSheet} from "react-native";
-import { auth, db } from "../../../app/services/firebaseConfig"; // Adjust the import path as needed
+import { auth, db } from "../../../app/services/firebaseConfig";
 import LoginForm from './LoginForm';
 
 const baseUrl = Constants.expoConfig?.extra?.baseUrl;
@@ -31,8 +31,24 @@ export default function LoginScreen() {
             const userCredential = await signInWithEmailAndPassword(auth, trimmedEmail, password);
             const user = userCredential.user;
 
-            console.log("Login successful:", userCredential.user.email);
+        // 2. Get user profile from Firestore
+            const userDoc = await getDoc(doc(db, "users", user.uid));
 
+            if (!userDoc.exists()) {
+              Alert.alert("Error", "User profile not found");
+              return;
+            }
+
+            const userData = userDoc.data();
+            console.log("User Data:", userData);
+
+            // 3. Check role
+            if (userData.role !== "admin") {
+              Alert.alert("Access Denied", "You must be an admin to log in.");
+              return;
+            }
+
+            console.log("Login successful:", userCredential.user.email);
             const token = await registerForPushNotificationsAsync();
             console.log("📱 Expo Push Token:", token);
 
