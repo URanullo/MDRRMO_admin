@@ -1,7 +1,9 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { collection, doc, getDocs, onSnapshot, orderBy, query, Timestamp, updateDoc } from 'firebase/firestore';
+import { useEffect, useMemo, useState } from 'react';
 import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { db } from '../../services/firebaseConfig';
 
 interface EmergencyReport {
   id: string;
@@ -11,92 +13,63 @@ interface EmergencyReport {
   barangay: string;
   reportedBy: string;
   contactNumber: string;
-  dateTime: string;
+  dateTime: string | Date | Timestamp | null;
   status: 'Pending' | 'Responded' | 'Resolved';
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
 }
 
 export default function EmergencyHistory() {
   const router = useRouter();
+  const { filter } = useLocalSearchParams<{ filter?: string }>();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'All' | 'Pending' | 'Responded' | 'Resolved'>('All');
   const [refreshing, setRefreshing] = useState(false);
+  const [emergencyReports, setEmergencyReports] = useState<EmergencyReport[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
 
-  // Mock emergency data - in a real app, this would come from Firebase
-  const emergencyReports: EmergencyReport[] = useMemo(() => ([
-    {
-      id: '1',
-      type: 'Fire',
-      description: 'House fire reported in residential area',
-      location: '123 Main Street',
-      barangay: 'Poblacion',
-      reportedBy: 'Juan Dela Cruz',
-      contactNumber: '09123456789',
-      dateTime: '2024-01-15 14:30',
-      status: 'Resolved',
-      priority: 'High'
-    },
-    {
-      id: '2',
-      type: 'Flood',
-      description: 'Heavy flooding in low-lying areas',
-      location: 'Riverside Road',
-      barangay: 'Cabugao',
-      reportedBy: 'Maria Santos',
-      contactNumber: '09876543210',
-      dateTime: '2024-01-15 16:45',
-      status: 'Responded',
-      priority: 'Critical'
-    },
-    {
-      id: '3',
-      type: 'Medical Emergency',
-      description: 'Person collapsed in public area',
-      location: 'Market Square',
-      barangay: 'Campo',
-      reportedBy: 'Pedro Rodriguez',
-      contactNumber: '09111222333',
-      dateTime: '2024-01-15 18:20',
-      status: 'Pending',
-      priority: 'High'
-    },
-    {
-      id: '4',
-      type: 'Traffic Accident',
-      description: 'Two-vehicle collision on highway',
-      location: 'Highway 1',
-      barangay: 'Dugsangon',
-      reportedBy: 'Ana Garcia',
-      contactNumber: '09444555666',
-      dateTime: '2024-01-14 09:15',
-      status: 'Resolved',
-      priority: 'Medium'
-    },
-    {
-      id: '5',
-      type: 'Landslide',
-      description: 'Mudslide blocking main road',
-      location: 'Mountain Road',
-      barangay: 'Pautao',
-      reportedBy: 'Carlos Mendoza',
-      contactNumber: '09777888999',
-      dateTime: '2024-01-14 11:30',
-      status: 'Responded',
-      priority: 'Critical'
-    },
-    {
-      id: '6',
-      type: 'Power Outage',
-      description: 'Electrical failure affecting entire barangay',
-      location: 'Multiple areas',
-      barangay: 'Santo Rosario',
-      reportedBy: 'Elena Torres',
-      contactNumber: '09222333444',
-      dateTime: '2024-01-13 20:00',
-      status: 'Resolved',
-      priority: 'Medium'
+  useEffect(() => {
+    // Apply initial filter from route params (All | Pending | Responded | Resolved)
+    if (typeof filter === 'string') {
+      const normalized = filter as 'All' | 'Pending' | 'Responded' | 'Resolved';
+      if (['All', 'Pending', 'Responded', 'Resolved'].includes(normalized)) {
+        setStatusFilter(normalized);
+      }
     }
-  ]), []);
+  }, [filter]);
+
+  useEffect(() => {
+    const reportsQuery = query(collection(db, 'emergency_reports'), orderBy('dateTime', 'desc'));
+    const unsubscribe = onSnapshot(
+      reportsQuery,
+      (snapshot) => {
+        const items: EmergencyReport[] = snapshot.docs.map((doc) => {
+          const data = doc.data() as any;
+          return {
+            id: doc.id,
+            type: data.type ?? 'Unknown Type',
+            description: data.description ?? 'No description',
+            location: data.location ?? 'Unknown Location',
+            barangay: data.barangay ?? 'Unknown Barangay',
+            reportedBy: data.reportedBy ?? 'Anonymous',
+            contactNumber: data.contactNumber ?? data.reporterContactNumber ?? 'N/A',
+            dateTime: data.dateTime ?? null,
+            status: (data.status as EmergencyReport['status']) ?? 'Pending',
+            priority: (data.priority as EmergencyReport['priority']) ?? 'Medium',
+          };
+        });
+        setEmergencyReports(items);
+        setLoading(false);
+        setError(null);
+      },
+      (err) => {
+        setLoading(false);
+        setError(err.message ?? 'Failed to load reports');
+      }
+    );
+    return () => unsubscribe();
+  }, []);
 
   const filteredReports = useMemo(() => {
     return emergencyReports.filter(report => {
@@ -143,22 +116,73 @@ export default function EmergencyHistory() {
     }
   };
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    // Simulate API call
-    setTimeout(() => {
+  const onRefresh = async () => {
+    try {
+      setRefreshing(true);
+      const reportsQuery = query(collection(db, 'emergency_reports'), orderBy('dateTime', 'desc'));
+      const snap = await getDocs(reportsQuery);
+      const items: EmergencyReport[] = snap.docs.map((doc) => {
+        const data = doc.data() as any;
+        return {
+          id: doc.id,
+          type: data.type ?? 'Unknown Type',
+          description: data.description ?? 'No description',
+          location: data.location ?? 'Unknown Location',
+          barangay: data.barangay ?? 'Unknown Barangay',
+          reportedBy: data.reportedBy ?? 'Anonymous',
+          contactNumber: data.contactNumber ?? data.reporterContactNumber ?? 'N/A',
+          dateTime: data.dateTime ?? null,
+          status: (data.status as EmergencyReport['status']) ?? 'Pending',
+          priority: (data.priority as EmergencyReport['priority']) ?? 'Medium',
+        };
+      });
+      setEmergencyReports(items);
+    } catch (e: any) {
+      setError(e?.message ?? 'Refresh failed');
+    } finally {
       setRefreshing(false);
-    }, 1000);
+    }
   };
 
-  const formatDateTime = (dateTime: string) => {
-    const date = new Date(dateTime);
-    return date.toLocaleDateString('en-US', {
+  const formatDateTime = (dateTime: string | Date | Timestamp | null) => {
+    if (!dateTime) return '—';
+    let d: Date;
+    if (dateTime instanceof Timestamp) {
+      d = dateTime.toDate();
+    } else if (typeof dateTime === 'string') {
+      const parsed = new Date(dateTime);
+      if (isNaN(parsed.getTime())) return dateTime;
+      d = parsed;
+    } else if (dateTime instanceof Date) {
+      d = dateTime;
+    } else if ((dateTime as any)?.toDate) {
+      try { d = (dateTime as any).toDate(); } catch { return '—'; }
+    } else {
+      return '—';
+    }
+    return d.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleChangeStatus = async (reportId: string, newStatus: EmergencyReport['status']) => {
+    try {
+      setUpdatingIds(prev => new Set(Array.from(prev).concat(reportId)));
+      const ref = doc(collection(db, 'emergency_reports'), reportId);
+      await updateDoc(ref, { status: newStatus });
+      // onSnapshot will sync UI
+    } catch {
+      // Optionally surface error; keeping silent to avoid noisy UI
+    } finally {
+      setUpdatingIds(prev => {
+        const next = new Set(prev);
+        next.delete(reportId);
+        return next;
+      });
+    }
   };
 
   return (
@@ -245,13 +269,27 @@ export default function EmergencyHistory() {
         {filteredReports.length === 0 ? (
           <View style={styles.emptyState}>
             <MaterialIcons name="inbox" size={48} color="#ccc" />
-            <Text style={styles.emptyStateText}>No emergency reports found</Text>
-            <Text style={styles.emptyStateSubtext}>
-              {searchQuery || statusFilter !== 'All' 
-                ? 'Try adjusting your search or filter criteria'
-                : 'No emergency reports have been submitted yet'
-              }
-            </Text>
+            {loading ? (
+              <>
+                <Text style={styles.emptyStateText}>Loading reports...</Text>
+                <Text style={styles.emptyStateSubtext}>Please wait a moment.</Text>
+              </>
+            ) : error ? (
+              <>
+                <Text style={styles.emptyStateText}>Failed to load reports</Text>
+                <Text style={styles.emptyStateSubtext}>{error}</Text>
+              </>
+            ) : (
+              <>
+                <Text style={styles.emptyStateText}>No emergency reports found</Text>
+                <Text style={styles.emptyStateSubtext}>
+                  {searchQuery || statusFilter !== 'All' 
+                    ? 'Try adjusting your search or filter criteria'
+                    : 'No emergency reports have been submitted yet'
+                  }
+                </Text>
+              </>
+            )}
           </View>
         ) : (
           filteredReports.map((report) => (
@@ -302,6 +340,36 @@ export default function EmergencyHistory() {
                 <View style={[styles.priorityBadge, { backgroundColor: getPriorityColor(report.priority) }]}>
                   <Text style={styles.priorityText}>{report.priority} Priority</Text>
                 </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                  {(['Pending', 'Responded', 'Resolved'] as const).map((statusOption) => {
+                    const isActive = report.status === statusOption;
+                    const isUpdating = updatingIds.has(report.id);
+                    return (
+                      <TouchableOpacity
+                        key={statusOption}
+                        style={{
+                          paddingHorizontal: 12,
+                          paddingVertical: 8,
+                          borderRadius: 16,
+                          backgroundColor: isActive ? getStatusColor(statusOption) : '#f0f0f0',
+                          opacity: isUpdating ? 0.6 : 1,
+                          marginTop: 8,
+                        }}
+                        disabled={isUpdating || isActive}
+                        onPress={() => handleChangeStatus(report.id, statusOption)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={{
+                          color: isActive ? '#fff' : '#333',
+                          fontWeight: '700',
+                          fontSize: 12,
+                        }}>
+                          {statusOption}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </ScrollView>
               </View>
             </View>
           ))

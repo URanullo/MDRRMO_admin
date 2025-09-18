@@ -1,8 +1,12 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
-import { Auth, signOut, User } from 'firebase/auth';
+import * as Notifications from 'expo-notifications';
+import { Auth, EmailAuthProvider, reauthenticateWithCredential, signOut, updatePassword, User } from 'firebase/auth';
 import React, { useState } from 'react';
-import { Image, Modal, SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Modal, SafeAreaView, ScrollView, StatusBar, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from 'react-native';
+
+
 import * as FirebaseConfig from '../../../app/services/firebaseConfig';
 
 export default function ProfileScreen() {
@@ -10,6 +14,104 @@ export default function ProfileScreen() {
   const user = typedAuth.currentUser as User | null;
 
   const [logoutVisible, setLogoutVisible] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [notifVisible, setNotifVisible] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changing, setChanging] = useState(false);
+  const [notificationsEnabled, setNotificationsEnabled] = useState<boolean>(false);
+  const [selectedSound, setSelectedSound] = useState<string>('default');
+  const [themeOverride, setThemeOverride] = useState<'system' | 'light' | 'dark'>('system');
+
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const stored = await AsyncStorage.getItem('notificationsEnabled');
+        if (stored != null) setNotificationsEnabled(stored === 'true');
+        const sound = await AsyncStorage.getItem('alarmSound');
+        if (sound) setSelectedSound(sound);
+        const theme = await AsyncStorage.getItem('themeOverride');
+        if (theme === 'light' || theme === 'dark') setThemeOverride(theme);
+        else setThemeOverride('system');
+      } catch {}
+    })();
+  }, []);
+
+  const saveNotificationsPreference = async (enabled: boolean) => {
+    try {
+      setNotificationsEnabled(enabled);
+      await AsyncStorage.setItem('notificationsEnabled', enabled ? 'true' : 'false');
+      if (enabled) {
+        const settings = await Notifications.getPermissionsAsync();
+        if (!settings.granted) {
+          await Notifications.requestPermissionsAsync();
+        }
+      }
+    } catch {}
+  };
+
+  const saveSound = async (sound: string) => {
+    try {
+      setSelectedSound(sound);
+      await AsyncStorage.setItem('alarmSound', sound);
+      // Best effort: configure Android channel with selected sound
+      if (sound) {
+        await Notifications.setNotificationChannelAsync('alarm', {
+          name: 'Alarm',
+          importance: Notifications.AndroidImportance.MAX,
+          sound: sound === 'default' ? undefined : sound,
+          vibrationPattern: [0, 250, 250, 250],
+          lightColor: '#FF231F7C',
+        });
+      }
+    } catch {}
+  };
+
+  const saveTheme = async (override: 'system' | 'light' | 'dark') => {
+    try {
+      setThemeOverride(override);
+      if (override === 'system') {
+        await AsyncStorage.removeItem('themeOverride');
+      } else {
+        await AsyncStorage.setItem('themeOverride', override);
+      }
+    } catch {}
+  };
+
+  const handleChangePassword = async () => {
+    if (!user || !user.email) {
+      Alert.alert('Error', 'No authenticated user.');
+      return;
+    }
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      Alert.alert('Missing Fields', 'Please fill out all fields.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      Alert.alert('Weak Password', 'Password must be at least 6 characters.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Alert.alert('Mismatch', 'New password and confirm password do not match.');
+      return;
+    }
+    try {
+      setChanging(true);
+      const credential = EmailAuthProvider.credential(user.email, currentPassword);
+      await reauthenticateWithCredential(user, credential);
+      await updatePassword(user, newPassword);
+      Alert.alert('Success', 'Password updated successfully.');
+      setPasswordVisible(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (e: any) {
+      Alert.alert('Update Failed', e?.message || 'Could not update password.');
+    } finally {
+      setChanging(false);
+    }
+  };
 
   const confirmLogout = async () => {
     try {
@@ -71,7 +173,7 @@ export default function ProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
           <View style={styles.list}>
-            <TouchableOpacity style={styles.listItem} activeOpacity={0.75}>
+            <TouchableOpacity style={styles.listItem} activeOpacity={0.75} onPress={() => setPasswordVisible(true)}>
               <View style={styles.listLeft}>
                 <View style={[styles.iconPill, { backgroundColor: '#fff3e0' }]}>
                   <MaterialIcons name="lock" size={18} color="#fb8c00" />
@@ -81,7 +183,7 @@ export default function ProfileScreen() {
               <MaterialIcons name="chevron-right" size={22} color="#bbb" />
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.listItem} activeOpacity={0.75}>
+            <TouchableOpacity style={styles.listItem} activeOpacity={0.75} onPress={() => setNotifVisible(true)}>
               <View style={styles.listLeft}>
                 <View style={[styles.iconPill, { backgroundColor: '#e3f2fd' }]}>
                   <MaterialIcons name="notifications" size={18} color="#1e88e5" />
@@ -112,6 +214,117 @@ export default function ProfileScreen() {
               </TouchableOpacity>
               <TouchableOpacity style={[modalStyles.button, modalStyles.logout]} onPress={confirmLogout}>
                 <Text style={modalStyles.logoutText}>Logout</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Change Password Modal */}
+      <Modal transparent animationType="slide" visible={passwordVisible} onRequestClose={() => setPasswordVisible(false)}>
+        <View style={modalStyles.overlay}>
+          <View style={[modalStyles.container, { borderColor: '#fb8c00' }]}>
+            <Text style={[modalStyles.title, { color: '#fb8c00' }]}>Change Password</Text>
+            <View style={{ width: '100%', gap: 10 }}>
+              <TextInput
+                placeholder="Current Password"
+                secureTextEntry
+                value={currentPassword}
+                onChangeText={setCurrentPassword}
+                style={formStyles.input}
+                placeholderTextColor="#999"
+              />
+              <TextInput
+                placeholder="New Password"
+                secureTextEntry
+                value={newPassword}
+                onChangeText={setNewPassword}
+                style={formStyles.input}
+                placeholderTextColor="#999"
+              />
+              <TextInput
+                placeholder="Confirm New Password"
+                secureTextEntry
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                style={formStyles.input}
+                placeholderTextColor="#999"
+              />
+            </View>
+            <View style={modalStyles.buttonRow}>
+              <TouchableOpacity style={[modalStyles.button, modalStyles.cancel]} onPress={() => setPasswordVisible(false)} disabled={changing}>
+                <Text style={modalStyles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[modalStyles.button, { backgroundColor: '#fb8c00' }]} onPress={handleChangePassword} disabled={changing}>
+                <Text style={{ color: '#fff', fontWeight: '700' }}>{changing ? 'Updating...' : 'Update'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Notification Settings Modal */}
+      <Modal transparent animationType="slide" visible={notifVisible} onRequestClose={() => setNotifVisible(false)}>
+        <View style={modalStyles.overlay}>
+          <View style={[modalStyles.container, { borderColor: '#1e88e5' }]}>
+            <Text style={[modalStyles.title, { color: '#1e88e5' }]}>Notification Settings</Text>
+            <View style={{ width: '100%', gap: 14 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Text style={{ color: '#333', fontWeight: '600' }}>Enable Notifications</Text>
+                <Switch
+                  value={notificationsEnabled}
+                  onValueChange={saveNotificationsPreference}
+                />
+              </View>
+              <View style={{ marginTop: 4 }}>
+                <Text style={{ color: '#333', fontWeight: '600', marginBottom: 8 }}>Alarm Sound</Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                  {['default', 'notify.mp3'].map((snd) => (
+                    <TouchableOpacity
+                      key={snd}
+                      onPress={() => saveSound(snd)}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 16,
+                        backgroundColor: selectedSound === snd ? '#1e88e5' : '#f0f0f0'
+                      }}
+                    >
+                      <Text style={{ color: selectedSound === snd ? '#fff' : '#333', fontWeight: '700', fontSize: 12 }}>
+                        {snd === 'default' ? 'Default' : 'Notify.mp3'}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+              <View style={{ marginTop: 8 }}>
+                <Text style={{ color: '#333', fontWeight: '600', marginBottom: 8 }}>Theme</Text>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  {(['system', 'light', 'dark'] as const).map((opt) => (
+                    <TouchableOpacity
+                      key={opt}
+                      onPress={() => saveTheme(opt)}
+                      style={{
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 16,
+                        backgroundColor: themeOverride === opt ? '#1e88e5' : '#f0f0f0'
+                      }}
+                    >
+                      <Text style={{ color: themeOverride === opt ? '#fff' : '#333', fontWeight: '700', fontSize: 12 }}>
+                        {opt === 'system' ? 'System' : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+              <Text style={{ color: '#666', fontSize: 12 }}>
+                You can manage system notification permissions from device settings.
+              </Text>
+            </View>
+            <View style={[modalStyles.buttonRow, { marginTop: 16 }]}>
+              <TouchableOpacity style={[modalStyles.button, { backgroundColor: '#1e88e5' }]} onPress={() => setNotifVisible(false)}>
+                <Text style={{ color: '#fff', fontWeight: '700' }}>Done</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -160,4 +373,17 @@ const modalStyles = StyleSheet.create({
   logout: { backgroundColor: "#d9534f" },
   cancelText: { color: "#333", fontWeight: "600" },
   logoutText: { color: "#fff", fontWeight: "600" },
+});
+
+const formStyles = StyleSheet.create({
+  input: {
+    width: '100%',
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    color: '#222',
+  },
 });

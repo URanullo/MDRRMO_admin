@@ -4,12 +4,10 @@ import { Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, Touchable
 export default function SendAlarmScreen() {
   const [alarmType, setAlarmType] = useState('');
   const [alarmLevel, setAlarmLevel] = useState('');
-  const [targetBarangay, setTargetBarangay] = useState('');
   const [message, setMessage] = useState('');
 
   const [showTypeModal, setShowTypeModal] = useState(false);
   const [showLevelModal, setShowLevelModal] = useState(false);
-  const [showBarangayModal, setShowBarangayModal] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const ALARM_TYPES = ['Flood', 'Fire', 'Landslide', 'Earthquake', 'Typhoon', 'Other'];
@@ -20,26 +18,15 @@ export default function SendAlarmScreen() {
     { label: 'Evacuation', color: '#e53935' },
     { label: 'Emergency', color: '#000000' },
   ];
-  const BARANGAYS = [
-    'All Barangays',
-    'Cabugao',
-    'Campo',
-    'Dugsangon',
-    'Pautao',
-    'Poblacion',
-    'Pongtud',
-    'Santo Rosario',
-    'Cambuayon',
-    'Payapag',
-  ];
 
-  const canSend = alarmType && alarmLevel && targetBarangay;
+  const canSend = alarmType && alarmLevel;
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}></Text>
 
+        {/* Alarm Type */}
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Alarm Type</Text>
           <TouchableOpacity style={styles.input} onPress={() => setShowTypeModal(true)} activeOpacity={0.7}>
@@ -49,6 +36,7 @@ export default function SendAlarmScreen() {
           </TouchableOpacity>
         </View>
 
+        {/* Alarm Level */}
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Alarm Level</Text>
           <TouchableOpacity style={styles.input} onPress={() => setShowLevelModal(true)} activeOpacity={0.7}>
@@ -65,15 +53,7 @@ export default function SendAlarmScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.fieldGroup}>
-          <Text style={styles.label}>Target Barangay</Text>
-          <TouchableOpacity style={styles.input} onPress={() => setShowBarangayModal(true)} activeOpacity={0.7}>
-            <Text style={[styles.dropdownText, !targetBarangay && styles.placeholderText]}>
-              {targetBarangay || 'Select Barangay'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
+        {/* Message */}
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Message / Additional Instructions</Text>
           <TextInput
@@ -86,6 +66,7 @@ export default function SendAlarmScreen() {
           />
         </View>
 
+        {/* Actions */}
         <View style={styles.actionsRow}>
           <TouchableOpacity
             style={[styles.button, styles.sendButton, !canSend && styles.buttonDisabled]}
@@ -94,12 +75,14 @@ export default function SendAlarmScreen() {
           >
             <Text style={styles.sendButtonText}>Send Alarm</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, styles.cancelButton]} onPress={() => {
-            setAlarmType('');
-            setAlarmLevel('');
-            setTargetBarangay('');
-            setMessage('');
-          }}>
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
+            onPress={() => {
+              setAlarmType('');
+              setAlarmLevel('');
+              setMessage('');
+            }}
+          >
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
         </View>
@@ -150,38 +133,20 @@ export default function SendAlarmScreen() {
         </View>
       </Modal>
 
-      {/* Barangay Modal */}
-      <Modal transparent visible={showBarangayModal} animationType="fade" onRequestClose={() => setShowBarangayModal(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Select Target Barangay</Text>
-            <ScrollView style={{ maxHeight: 300 }}>
-              {BARANGAYS.map(b => (
-                <TouchableOpacity key={b} style={styles.optionItem} onPress={() => { setTargetBarangay(b); setShowBarangayModal(false); }}>
-                  <Text style={styles.optionText}>{b}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <View style={styles.modalActions}>
-              <TouchableOpacity onPress={() => setShowBarangayModal(false)} style={styles.modalCancelBtn}>
-                <Text style={styles.modalCancelText}>Close</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
       {/* Confirm Send Modal */}
       <Modal transparent visible={showConfirmModal} animationType="fade" onRequestClose={() => setShowConfirmModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <Text style={styles.modalTitle}>Confirm Send</Text>
-            <Text style={styles.confirmText}>Are you sure you want to send this alarm to {targetBarangay}?</Text>
+            <Text style={styles.confirmText}>Are you sure you want to send this alarm?</Text>
             <View style={styles.confirmActions}>
-              <TouchableOpacity style={[styles.button, styles.confirmBtn]} onPress={() => {
-                setShowConfirmModal(false);
-                // Integrate send logic here
-              }}>
+              <TouchableOpacity
+                style={[styles.button, styles.confirmBtn]}
+                onPress={() => {
+                  setShowConfirmModal(false);
+                  // TODO: integrate send logic here
+                }}
+              >
                 <Text style={styles.confirmBtnText}>Confirm</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.button, styles.modalCancelBtn]} onPress={() => setShowConfirmModal(false)}>

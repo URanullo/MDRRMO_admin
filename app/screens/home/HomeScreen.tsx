@@ -1,14 +1,37 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
 import { SafeAreaView, ScrollView, StatusBar, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
+import { db } from '../../services/firebaseConfig';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const navigation = useNavigation();
+  // const navigation = useNavigation();
   const { width } = useWindowDimensions();
   const isSmall = width < 768;
+  const [totalCount, setTotalCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
+  const [resolvedCount, setResolvedCount] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(collection(db, 'emergency_reports'), (snapshot) => {
+      let total = 0;
+      let pending = 0;
+      let resolved = 0;
+      snapshot.forEach((doc) => {
+        total += 1;
+        const status = (doc.data() as any)?.status;
+        if (status === 'Pending') pending += 1;
+        if (status === 'Resolved') resolved += 1;
+      });
+      setTotalCount(total);
+      setPendingCount(pending);
+      setResolvedCount(resolved);
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -29,12 +52,12 @@ export default function HomeScreen() {
         </LinearGradient>
 
         <View style={styles.statsRow}>
-          <StatCard icon="list-alt" label="Total cases" value="24" color="#1e88e5"
-           onPress={() => router.push('/screens/emergency_cases/EmergencyCasesScreen')} />
-          <StatCard icon="hourglass-empty" label="Pending" value="5" color="#fb8c00"
-           onPress={() => router.push('/screens/emergency_cases/EmergencyCasesScreen')} />
-          <StatCard icon="check-circle" label="Resolved" value="2" color="#43a047"
-           onPress={() => router.push('/screens/emergency_cases/EmergencyCasesScreen')} />
+          <StatCard icon="list-alt" label="Total cases" value={String(totalCount)} color="#1e88e5"
+           onPress={() => router.push({ pathname: '/screens/emergency_cases/EmergencyCasesScreen', params: { filter: 'All' } })} />
+          <StatCard icon="hourglass-empty" label="Pending" value={String(pendingCount)} color="#fb8c00"
+           onPress={() => router.push({ pathname: '/screens/emergency_cases/EmergencyCasesScreen', params: { filter: 'Pending' } })} />
+          <StatCard icon="check-circle" label="Resolved" value={String(resolvedCount)} color="#43a047"
+           onPress={() => router.push({ pathname: '/screens/emergency_cases/EmergencyCasesScreen', params: { filter: 'Resolved' } })} />
         </View>
 
         <View style={styles.section}>
@@ -105,16 +128,7 @@ function ListItem({ icon, title, subtitle, color }: { icon: any; title: string; 
   );
 }
 
-function ActionButton({ icon, label, color, onPress }: { icon: any; label: string; color: string; onPress: () => void }) {
-  return (
-    <TouchableOpacity style={styles.actionButton} onPress={onPress} activeOpacity={0.8}>
-      <View style={[styles.iconPill, { backgroundColor: '#f7f7f7' }]}>
-        <MaterialIcons name={icon} size={18} color={color} />
-      </View>
-      <Text style={styles.actionLabel}>{label}</Text>
-    </TouchableOpacity>
-  );
-}
+// ActionButton reserved for future quick actions
 
 const styles = StyleSheet.create({
   safeArea: {

@@ -1,3 +1,4 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
 import { useColorScheme as useRNColorScheme } from 'react-native';
 
@@ -6,16 +7,23 @@ import { useColorScheme as useRNColorScheme } from 'react-native';
  */
 export function useColorScheme() {
   const [hasHydrated, setHasHydrated] = useState(false);
+  const [override, setOverride] = useState<'light' | 'dark' | null>(null);
 
   useEffect(() => {
     setHasHydrated(true);
+    (async () => {
+      try {
+        const stored = await AsyncStorage.getItem('themeOverride');
+        if (stored === 'light' || stored === 'dark') setOverride(stored);
+      } catch {}
+    })();
   }, []);
 
   const colorScheme = useRNColorScheme();
 
   if (hasHydrated) {
-    return colorScheme;
+    return override ?? colorScheme ?? 'light';
   }
 
-  return 'light';
+  return override ?? 'light';
 }
