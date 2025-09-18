@@ -23,12 +23,15 @@ export default function RootLayout() {
 
     // Listen for incoming notifications
     const subscription = Notifications.addNotificationReceivedListener(notification => {
-      console.log('📱 Mobile notification received:', notification);
-      console.log('Notification data:', JSON.stringify(notification.request.content.data));
+      console.log('Mobile notification received:', notification);
+       const notificationData = notification.request.content.data;
+      const userDetails = notificationData as EmergencyReportPayload;
+
+      const bodyDetails = `${notification.request.content.body}\nReporter: ${userDetails.reportedBy} - (${userDetails.barangay})\nContact No: ${userDetails.reporterContactNumber}\n${userDetails.description}`;
 
       Alert.alert(
         notification.request.content.title || 'Notification',
-        notification.request.content.body || ''
+        bodyDetails,
       );
 
       (async () => {
@@ -39,15 +42,9 @@ export default function RootLayout() {
       })();
 
      // --- Save Notification Data to Firestore ---
-      const notificationData = notification.request.content.data;
-      console.log('Notification data payload:', notificationData);
-
       if (notificationData && typeof notificationData === 'object') {
-        // Assume the data payload from FCM directly matches EmergencyReportPayload structure
-        // Perform basic validation or type casting if necessary
         const reportPayload = notificationData as EmergencyReportPayload;
 
-        // You might want to add more robust validation here
         if (reportPayload.type && reportPayload.description && reportPayload.barangay) {
           saveNewEmergencyReport(reportPayload)
             .then(reportId => {
@@ -69,35 +66,6 @@ export default function RootLayout() {
         console.warn('Received notification without a valid data payload.');
          Alert.alert("Alert Received", "An emergency alert was received, but detailed information was not included for reporting.");
       }
-      // --- End Save Notification Data ---
-
-     // Handle notifications that are tapped on when the app is in the background or killed
-      // This is important if you want to navigate or perform actions when the user opens the app via a notification.
-      const backgroundInteractionSubscription = Notifications.addNotificationResponseReceivedListener(response => {
-        console.log('📱 Notification tapped (background/killed):', response);
-        const notificationData = response.notification.request.content.data;
-        console.log('Notification data payload (from tap):', notificationData);
-
-        // Here you might navigate to the EmergencyCasesScreen or a specific report detail screen
-        // e.g., router.push(`/emergency-cases/${notificationData.reportId}`);
-        // You could also save the data here if it wasn't saved by the foreground listener
-        // (though it's usually better to save on receipt if possible).
-        // For now, let's assume saving is handled by the foreground listener or a Cloud Function.
-
-        if (notificationData && typeof notificationData === 'object') {
-          // Example: If the notification data includes an ID of an already saved report
-          const { reportId } = notificationData as { reportId?: string };
-          if (reportId) {
-              // Potentially navigate to the specific report
-              // router.push(`/emergency_cases/${reportId}`); // Adjust your route
-              console.log("User tapped notification, potentially for report ID:", reportId);
-          } else {
-              // Or navigate to the general list if no specific ID
-              // router.push('/emergency_cases');
-               console.log("User tapped notification, navigating to general emergency list.");
-          }
-        }
-      });
     });
 
     return () => {
