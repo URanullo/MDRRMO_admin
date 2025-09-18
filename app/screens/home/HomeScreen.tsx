@@ -53,14 +53,15 @@ export default function HomeScreen() {
         </View>
 
          <View style={styles.alarmContainer}>
-            <TouchableOpacity
-              style={styles.alarmButton}
-              onPress={() => router.push('/screens/send_alarm/SendAlarmScreen')}
-              activeOpacity={0.85} >
+         <TouchableOpacity
+  style={styles.alarmButton}
+  onPress={() => router.push('/screens/send_alarm/SendAlarmScreen')}
+  activeOpacity={0.85} >
 
-              <MaterialIcons name="emergency" size={36} color="#fff" />
-              <Text style={styles.alarmText}>Send Alarm</Text>
-            </TouchableOpacity>
+  <Text style={{ fontSize: 36, color: '#fff' }}>✠</Text>
+  <Text style={styles.alarmText}>Send Alarm</Text>
+</TouchableOpacity>
+
           </View>
       </ScrollView>
     </SafeAreaView>
