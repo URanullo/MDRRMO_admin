@@ -64,7 +64,8 @@ export default function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
                     ]}
                     onPress={() => {
                         if (email.trim() && password) {
-                            console.log('Calling handleLogin...');
+                            console.log('email', email);
+                            console.log('password', password);
                             onSubmit(email, password, isLoading);
                         } else {
                             console.log('Form validation failed');

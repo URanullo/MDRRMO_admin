@@ -62,7 +62,7 @@ export default function LoginScreen() {
       await fetch(`${baseUrl}/save-token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: userCredential.user.email, token }),
+        body: JSON.stringify({ email: userCredential.user.email, token, role: userData.role }),
       });
 
     } catch (error: any) {

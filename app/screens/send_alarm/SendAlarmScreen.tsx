@@ -1,10 +1,16 @@
+import Constants from 'expo-constants';
+import { useNavigation } from '@react-navigation/native';
 import React, { useState } from 'react';
-import { Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,ActivityIndicator, Alert  } from 'react-native';
+
+const baseUrl = Constants.expoConfig?.extra?.baseUrl;
 
 export default function SendAlarmScreen() {
   const [alarmType, setAlarmType] = useState('');
   const [alarmLevel, setAlarmLevel] = useState('');
   const [message, setMessage] = useState('');
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const navigation = useNavigation();
 
   const [showTypeModal, setShowTypeModal] = useState(false);
   const [showLevelModal, setShowLevelModal] = useState(false);
@@ -20,6 +26,70 @@ export default function SendAlarmScreen() {
   ];
 
   const canSend = alarmType && alarmLevel;
+
+  const handleSubmit = async () => {
+    setIsLoading(true);
+    try {
+      const now = new Date().toISOString();
+      const payload = {
+        title: `Alert! ${alarmType} reported`,
+        body: `Emergency in all areas`,
+        sound: "default",
+        data: {
+          type: alarmType,
+          description: message,
+          reportedBy: 'MDRRMO Bacuag',
+          alarmLevel,
+          clientDateTime: now,
+        }
+      };
+
+      console.log('payload', payload);
+      const response = await fetch(`${baseUrl}/broadcast-update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        Alert.alert(
+          'Alarm Submitted',
+          'Your emergency report has been successfully sent.',
+          [{ text: 'OK', onPress: () => navigation.goBack() }]
+        );
+          setAlarmType('');
+          setAlarmLevel('');
+          setMessage('');
+      } else {
+        let errorTitle = `Submit Failed (Status: ${response.status})`;
+        let errorMessage = 'An unknown error occurred.';
+        try {
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            const errorData: ServerError = await response.json();
+            if (errorData.error) {
+              errorMessage = errorData.error;
+            } else if (errorData.message) {
+              errorMessage = errorData.message;
+            } else {
+              errorMessage = 'Could not retrieve specific error details from server.';
+            }
+          } else {
+            const errorText = await response.text();
+            errorMessage = errorText || 'Server returned a non-JSON error response.';
+          }
+        } catch (e) {
+          console.warn('Failed to parse error details:', e);
+          errorMessage = 'Could not parse error details from server.';
+        }
+        Alert.alert(errorTitle, errorMessage);
+      }
+    } catch (error: any) {
+      Alert.alert('Submit Failed', `An error occurred: ${error.message || 'Please check your network connection.'}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -144,7 +214,8 @@ export default function SendAlarmScreen() {
                 style={[styles.button, styles.confirmBtn]}
                 onPress={() => {
                   setShowConfirmModal(false);
-                  // TODO: integrate send logic here
+                  handleSubmit();
+                  console.log('Alarm sent!');
                 }}
               >
                 <Text style={styles.confirmBtnText}>Confirm</Text>
@@ -153,6 +224,14 @@ export default function SendAlarmScreen() {
                 <Text style={styles.modalCancelText}>Cancel</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+      <Modal visible={isLoading} transparent animationType="fade">
+        <View style={styles.loadingOverlay}>
+          <View style={styles.loadingBox}>
+            <ActivityIndicator size="large" color="#e53935" />
+            <Text style={styles.loadingText}>Broadcasting...</Text>
           </View>
         </View>
       </Modal>
@@ -297,5 +376,23 @@ const styles = StyleSheet.create({
   confirmBtnText: {
     color: '#fff',
     fontWeight: '700',
+  },
+  loadingOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingBox: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#444',
+    fontWeight: '600',
   },
 });

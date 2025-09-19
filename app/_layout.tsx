@@ -9,8 +9,6 @@ import { Timestamp } from 'firebase/firestore';
 export default function RootLayout() {
   useEffect(() => {
     (async () => {
-      // Set default channel for Android with sound
-      if (Platform.OS === 'android') {
         await Notifications.setNotificationChannelAsync('default', {
           name: 'default',
           importance: Notifications.AndroidImportance.MAX,
@@ -18,7 +16,6 @@ export default function RootLayout() {
           vibrationPattern: [0, 250, 250, 250],
           lightColor: '#FF231F7C',
         });
-      }
     })();
 
     // Listen for incoming notifications
