@@ -54,9 +54,7 @@ export default function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
                         <MaterialIcons name={showPassword ? "visibility-off" : "visibility"} size={24} color="#888" />
                     </Pressable>
                 </View>
-                <Text style={styles.passwordHint}>
-                    Use at least 8 characters with 1 number, and one special character.
-                </Text>
+                
                 <Pressable
                     style={({ pressed }) => [
                         styles.loginButton,
