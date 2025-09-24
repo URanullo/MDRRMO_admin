@@ -2,7 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { collection, deleteDoc, doc, getDocs, onSnapshot, orderBy, query, Timestamp, updateDoc } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, Image, Linking, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { db } from '../../services/firebaseConfig';
 
 interface EmergencyReport {
@@ -16,6 +16,7 @@ interface EmergencyReport {
   dateTime: string | Date | Timestamp | null;
   status: 'Pending' | 'Responded' | 'Resolved';
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
+  images?: string[];
 }
 
 export default function EmergencyHistory() {
@@ -58,6 +59,7 @@ export default function EmergencyHistory() {
             dateTime: data.dateTime ?? null,
             status: (data.status as EmergencyReport['status']) ?? 'Pending',
             priority: (data.priority as EmergencyReport['priority']) ?? 'Medium',
+            images: Array.isArray(data.images) ? data.images : [],
           };
         });
         setEmergencyReports(items);
@@ -135,6 +137,7 @@ export default function EmergencyHistory() {
           dateTime: data.dateTime ?? null,
           status: (data.status as EmergencyReport['status']) ?? 'Pending',
           priority: (data.priority as EmergencyReport['priority']) ?? 'Medium',
+          images: Array.isArray(data.images) ? data.images : [],
         };
       });
       setEmergencyReports(items);
@@ -361,6 +364,21 @@ export default function EmergencyHistory() {
               </View>
 
               <Text style={styles.description}>{report.description}</Text>
+
+              {report.images && report.images.length > 0 && (
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.imagesScroll} contentContainerStyle={styles.imagesRow}>
+                  {report.images.map((uri, idx) => (
+                    <TouchableOpacity
+                      key={uri + idx}
+                      onPress={() => Linking.openURL(uri)}
+                      activeOpacity={0.8}
+                      style={styles.thumbnailWrapper}
+                    >
+                      <Image source={{ uri }} style={styles.thumbnail} />
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              )}
               
               <View style={styles.reportDetails}>
                 <View style={styles.detailRow}>
@@ -633,5 +651,20 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     backgroundColor: '#fdecea',
     marginRight: 8,
+  },
+  imagesScroll: {
+    marginBottom: 12,
+  },
+  imagesRow: {
+    gap: 8,
+  },
+  thumbnailWrapper: {
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: '#eee',
+  },
+  thumbnail: {
+    width: 72,
+    height: 72,
   },
 });
