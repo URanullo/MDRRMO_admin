@@ -1,5 +1,5 @@
 // services/emergencyService.ts (or wherever you defined it)
-import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from './firebaseConfig'; // Your Firebase config
 
 export interface EmergencyReportPayload {
