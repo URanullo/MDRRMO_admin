@@ -1,8 +1,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { collection, doc, getDocs, onSnapshot, orderBy, query, Timestamp, updateDoc } from 'firebase/firestore';
+import { collection, deleteDoc, doc, getDocs, onSnapshot, orderBy, query, Timestamp, updateDoc } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
-import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { db } from '../../services/firebaseConfig';
 
 interface EmergencyReport {
@@ -28,6 +28,7 @@ export default function EmergencyHistory() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingIds, setUpdatingIds] = useState<Set<string>>(new Set());
+  const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     // Apply initial filter from route params (All | Pending | Responded | Resolved)
@@ -185,6 +186,36 @@ export default function EmergencyHistory() {
     }
   };
 
+  const handleDeleteReport = (reportId: string) => {
+    Alert.alert(
+      'Delete report',
+      'Are you sure you want to permanently delete this report?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setDeletingIds(prev => new Set(Array.from(prev).concat(reportId)));
+              const ref = doc(collection(db, 'emergency_reports'), reportId);
+              await deleteDoc(ref);
+              // onSnapshot will remove it from UI
+            } catch {
+              // Optionally notify user
+            } finally {
+              setDeletingIds(prev => {
+                const next = new Set(prev);
+                next.delete(reportId);
+                return next;
+              });
+            }
+          }
+        }
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
@@ -308,10 +339,24 @@ export default function EmergencyHistory() {
                     <Text style={styles.emergencyLocation}>{report.barangay}</Text>
                   </View>
                 </View>
-                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(report.status) + '20' }]}>
-                  <Text style={[styles.statusText, { color: getStatusColor(report.status) }]}>
-                    {report.status}
-                  </Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                  <TouchableOpacity
+                    accessibilityLabel="Delete report"
+                    onPress={() => handleDeleteReport(report.id)}
+                    disabled={deletingIds.has(report.id)}
+                    style={[
+                      styles.deleteButton,
+                      deletingIds.has(report.id) && { opacity: 0.6 }
+                    ]}
+                    activeOpacity={0.7}
+                  >
+                    <MaterialIcons name="delete" size={18} color="#e53935" />
+                  </TouchableOpacity>
+                  <View style={[styles.statusBadge, { backgroundColor: getStatusColor(report.status) + '20' }]}>
+                    <Text style={[styles.statusText, { color: getStatusColor(report.status) }]}>
+                      {report.status}
+                    </Text>
+                  </View>
                 </View>
               </View>
 
@@ -582,5 +627,11 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
     color: '#fff',
+  },
+  deleteButton: {
+    padding: 6,
+    borderRadius: 16,
+    backgroundColor: '#fdecea',
+    marginRight: 8,
   },
 });
