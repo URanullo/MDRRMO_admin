@@ -12,6 +12,8 @@ export interface EmergencyReportPayload {
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   clientDateTime?: string;
   images?: string[];
+  imageUrl?: string;
+  image?: string;
 }
 
 export interface EmergencyReport {

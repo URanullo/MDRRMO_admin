@@ -1,7 +1,7 @@
-import Constants from 'expo-constants';
 import { useNavigation } from '@react-navigation/native';
+import Constants from 'expo-constants';
 import React, { useState } from 'react';
-import { Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View,ActivityIndicator, Alert  } from 'react-native';
+import { ActivityIndicator, Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const baseUrl = Constants.expoConfig?.extra?.baseUrl;
 

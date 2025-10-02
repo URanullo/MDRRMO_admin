@@ -2,7 +2,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { collection, deleteDoc, doc, getDocs, onSnapshot, orderBy, query, Timestamp, updateDoc } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, Image, Linking, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import * as RN from 'react-native';
+import { Image, Linking, RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { db } from '../../services/firebaseConfig';
 
 interface EmergencyReport {
@@ -190,9 +191,9 @@ export default function EmergencyHistory() {
   };
 
   const handleDeleteReport = (reportId: string) => {
-    Alert.alert(
-      'Delete report',
-      'Are you sure you want to permanently delete this report?',
+    RN.Alert.alert(
+      'Delete Report',
+      'Are you sure you want to permanently delete this emergency report? This action cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -201,11 +202,22 @@ export default function EmergencyHistory() {
           onPress: async () => {
             try {
               setDeletingIds(prev => new Set(Array.from(prev).concat(reportId)));
-              const ref = doc(collection(db, 'emergency_reports'), reportId);
+              const ref = doc(db, 'emergency_reports', reportId);
               await deleteDoc(ref);
-              // onSnapshot will remove it from UI
-            } catch {
-              // Optionally notify user
+              
+              // Show success message
+              RN.Alert.alert(
+                'Success',
+                'Emergency report has been permanently deleted.',
+                [{ text: 'OK' }]
+              );
+            } catch (error) {
+              console.error('Error deleting report:', error);
+              RN.Alert.alert(
+                'Error',
+                'Failed to delete the report. Please try again.',
+                [{ text: 'OK' }]
+              );
             } finally {
               setDeletingIds(prev => {
                 const next = new Set(prev);
