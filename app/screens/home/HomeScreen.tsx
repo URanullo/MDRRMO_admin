@@ -16,7 +16,7 @@ export default function HomeScreen() {
   const [resolvedCount, setResolvedCount] = useState(0);
 
   useEffect(() => {
-    const unsubscribe = onSnapshot(collection(db, 'emergency_reports'), (snapshot) => {
+    const unsubscribe = onSnapshot(collection(db, 'resident_emergency_reports'), (snapshot) => {
       let total = 0;
       let pending = 0;
       let resolved = 0;

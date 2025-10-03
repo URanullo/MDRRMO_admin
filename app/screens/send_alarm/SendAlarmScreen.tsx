@@ -2,6 +2,8 @@ import { useNavigation } from '@react-navigation/native';
 import Constants from 'expo-constants';
 import React, { useState } from 'react';
 import { ActivityIndicator, Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { db } from '../../services/firebaseConfig';
+import { addDoc, collection } from 'firebase/firestore';
 
 const baseUrl = Constants.expoConfig?.extra?.baseUrl;
 
@@ -60,6 +62,10 @@ export default function SendAlarmScreen() {
           setAlarmType('');
           setAlarmLevel('');
           setMessage('');
+
+          const docRef = await addDoc(collection(db, 'admin_news_report'), payload);
+          console.log("admin_news_report saved to firebase : ", docRef.id);
+
       } else {
         let errorTitle = `Submit Failed (Status: ${response.status})`;
         let errorMessage = 'An unknown error occurred.';

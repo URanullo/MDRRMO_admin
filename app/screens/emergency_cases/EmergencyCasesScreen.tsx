@@ -43,7 +43,7 @@ export default function EmergencyHistory() {
   }, [filter]);
 
   useEffect(() => {
-    const reportsQuery = query(collection(db, 'emergency_reports'), orderBy('dateTime', 'desc'));
+    const reportsQuery = query(collection(db, 'resident_emergency_reports'), orderBy('dateTime', 'desc'));
     const unsubscribe = onSnapshot(
       reportsQuery,
       (snapshot) => {
@@ -123,7 +123,7 @@ export default function EmergencyHistory() {
   const onRefresh = async () => {
     try {
       setRefreshing(true);
-      const reportsQuery = query(collection(db, 'emergency_reports'), orderBy('dateTime', 'desc'));
+      const reportsQuery = query(collection(db, 'resident_emergency_reports'), orderBy('dateTime', 'desc'));
       const snap = await getDocs(reportsQuery);
       const items: EmergencyReport[] = snap.docs.map((doc) => {
         const data = doc.data() as any;
@@ -176,7 +176,7 @@ export default function EmergencyHistory() {
   const handleChangeStatus = async (reportId: string, newStatus: EmergencyReport['status']) => {
     try {
       setUpdatingIds(prev => new Set(Array.from(prev).concat(reportId)));
-      const ref = doc(collection(db, 'emergency_reports'), reportId);
+      const ref = doc(collection(db, 'resident_emergency_reports'), reportId);
       await updateDoc(ref, { status: newStatus });
       // onSnapshot will sync UI
     } catch {
@@ -202,7 +202,7 @@ export default function EmergencyHistory() {
           onPress: async () => {
             try {
               setDeletingIds(prev => new Set(Array.from(prev).concat(reportId)));
-              const ref = doc(db, 'emergency_reports', reportId);
+              const ref = doc(db, 'resident_emergency_reports', reportId);
               await deleteDoc(ref);
               
               // Show success message

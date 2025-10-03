@@ -12,8 +12,7 @@ export interface EmergencyReportPayload {
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   clientDateTime?: string;
   images?: string[];
-  imageUrl?: string;
-  image?: string;
+  email: string;
 }
 
 export interface EmergencyReport {
@@ -28,6 +27,7 @@ export interface EmergencyReport {
   status: 'Pending' | 'Responded' | 'Resolved';
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   images: string[];
+  email: string;
 }
 
 export const saveNewEmergencyReport = async (
@@ -40,16 +40,17 @@ export const saveNewEmergencyReport = async (
       location: payload.location || 'Unknown Location',
       barangay: payload.barangay || 'Unknown Barangay',
       reportedBy: payload.reportedBy || 'Anonymous',
-      contactNumber: payload.reporterContactNumber || 'N/A', // Use the specific field from payload
-      priority: payload.priority || 'Medium', // Default priority
+      contactNumber: payload.reporterContactNumber || 'N/A',
+      priority: payload.priority || 'Medium',
       status: 'Pending',
       dateTime: payload.clientDateTime
         ? Timestamp.fromDate(new Date(payload.clientDateTime))
         : serverTimestamp() as Timestamp,
       images: payload.images ?? [],
+      email: payload.email || 'Unknown Email',
     };
 
-    const docRef = await addDoc(collection(db, "emergency_reports"), newReportData);
+    const docRef = await addDoc(collection(db, "resident_emergency_reports"), newReportData);
     console.log("Emergency report from notification saved with ID: ", docRef.id);
     return docRef.id;
   } catch (error) {

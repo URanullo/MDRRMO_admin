@@ -29,56 +29,16 @@ export default function RootLayout() {
        const notificationData = notification.request.content.data as any;
       const userDetails = notificationData as EmergencyReportPayload;
       
-      // Debug: Log the notification data to see what fields are available
       console.log('Notification data:', notificationData);
       console.log('User details:', userDetails);
 
       const bodyDetails = `${notification.request.content.body}\nReporter: ${userDetails.reportedBy} - (${userDetails.barangay})\nContact No: ${userDetails.reporterContactNumber}\n${userDetails.description}`;
 
-      // Show custom modal instead of Alert
       setModalTitle(notification.request.content.title || 'Emergency Alert');
       setModalBody(bodyDetails);
       
-      // Try multiple possible image field names and structures
-      const imageUrl = userDetails.imageUrl || 
-                      userDetails.image || 
-                      (userDetails.images && userDetails.images[0]) || 
-                      notificationData.imageUrl || 
-                      notificationData.image || 
-                      (notificationData.images && notificationData.images[0]) ||
-                      notificationData.attachedImage ||
-                      notificationData.photo ||
-                      notificationData.photoUrl ||
-                      notificationData.attachment ||
-                      // Check nested data structures
-                      (notificationData.data && notificationData.data.imageUrl) ||
-                      (notificationData.data && notificationData.data.image) ||
-                      (notificationData.data && notificationData.data.images && notificationData.data.images[0]) ||
-                      (notificationData.payload && notificationData.payload.imageUrl) ||
-                      (notificationData.payload && notificationData.payload.image) ||
-                      (notificationData.payload && notificationData.payload.images && notificationData.payload.images[0]) ||
-                      null;
-      
-      console.log('Image URL found:', imageUrl);
-      console.log('Full notification data structure:', JSON.stringify(notificationData, null, 2));
-      console.log('Available image fields:', {
-        userDetails_imageUrl: userDetails.imageUrl,
-        userDetails_image: userDetails.image,
-        userDetails_images: userDetails.images,
-        notificationData_imageUrl: notificationData.imageUrl,
-        notificationData_image: notificationData.image,
-        notificationData_images: notificationData.images,
-        notificationData_attachedImage: notificationData.attachedImage,
-        notificationData_photo: notificationData.photo,
-        notificationData_photoUrl: notificationData.photoUrl,
-        notificationData_attachment: notificationData.attachment,
-        notificationData_data: notificationData.data,
-        notificationData_payload: notificationData.payload
-      });
-      
-      // For testing purposes, if no image is found, you can uncomment the line below to test with a sample image
-      // const testImageUrl = imageUrl || 'https://picsum.photos/400/300?random=1';
-      
+      const imageUrl = userDetails.images[0] || null;
+
       setModalImageUrl(imageUrl);
       setShowModal(true);
 
