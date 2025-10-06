@@ -1,4 +1,3 @@
-import { MaterialIcons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { getAuth, onAuthStateChanged, User, type Auth } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
@@ -6,7 +5,9 @@ import React, { useEffect, useState } from 'react';
 import HomeScreen from './screens/home/HomeScreen';
 import LoginScreen from './screens/login/LoginScreen';
 import ProfileScreen from './screens/profile/ProfileScreen';
+import AlarmHistoryScreen from './screens/alarm_history/AlarmHistoryScreen';
 import { app, db } from './services/firebaseConfig';
+import { Ionicons } from '@expo/vector-icons';
 
 
 const Tab = createBottomTabNavigator();
@@ -65,14 +66,16 @@ export default function BottomTabNavigator() {
           if (route.name === 'Home') iconName = 'home';
           else if (route.name === 'Send Alarm') iconName = 'alarm';
           else if (route.name === 'Profile') iconName = 'person';
-          return <MaterialIcons name={iconName as any} size={size} color={color} />;
+          else if (route.name === 'Alarm History') iconName = 'alert-circle';
+          return <Ionicons name={iconName as any} size={size} color={color} />;
         },
         tabBarActiveTintColor: '#E53935',
         tabBarInactiveTintColor: '#bbb',
-        tabBarShowLabel: false,
+        tabBarShowLabel: true,
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ headerShown: false, }}/>
+      <Tab.Screen name="Alarm History" component={AlarmHistoryScreen} options={{ headerShown: true, }}/>
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ headerShown: false, }}/>
     </Tab.Navigator>
   );

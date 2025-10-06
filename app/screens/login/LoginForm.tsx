@@ -20,8 +20,8 @@ export default function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
                 <View style={styles.avatar}>
                     <MaterialIcons name="local-hospital" size={48} color="#fff" />
                 </View>
-                <Text style={styles.brand}>Bacuag Household</Text>
-                <Text style={styles.subtitleBrand}>Emergency Alarm</Text>
+                <Text style={styles.brand}>MDRRMO - Bacuag</Text>
+                <Text style={styles.subtitleBrand}>Emergency Response</Text>
             </View>
             <View style={styles.card}>
                 <Text style={styles.welcome}>Login Admin</Text>
@@ -173,6 +173,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 24,
         alignItems: 'center',
         marginBottom: 8,
+        marginTop: 15,
         minHeight: Platform.OS === 'ios' ? 44 : 48, // iOS and Android touch target guidelines
     },
     loginButtonDisabled: {

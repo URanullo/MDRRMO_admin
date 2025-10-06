@@ -34,12 +34,11 @@ export default function SendAlarmScreen() {
     try {
       const now = new Date().toISOString();
       const payload = {
-        title: `Alert! ${alarmType} reported`,
-        body: `Emergency in all areas`,
+        title: `${alarmType} ${alarmLevel}`,
+        body: message,
         sound: "default",
         data: {
           type: alarmType,
-          description: message,
           reportedBy: 'MDRRMO Bacuag',
           alarmLevel,
           clientDateTime: now,
@@ -63,8 +62,8 @@ export default function SendAlarmScreen() {
           setAlarmLevel('');
           setMessage('');
 
-          const docRef = await addDoc(collection(db, 'admin_news_report'), payload);
-          console.log("admin_news_report saved to firebase : ", docRef.id);
+          const docRef = await addDoc(collection(db, 'admin_alarm_report'), payload);
+          console.log("admin_alarm_report saved to firebase : ", docRef.id);
 
       } else {
         let errorTitle = `Submit Failed (Status: ${response.status})`;
