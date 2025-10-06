@@ -24,7 +24,7 @@ export default function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
                 <Text style={styles.subtitleBrand}>Emergency Response</Text>
             </View>
             <View style={styles.card}>
-                <Text style={styles.welcome}>Login Admin</Text>
+                <Text style={styles.welcome}>Administrator Login</Text>
                 <Text style={styles.label}>Email address</Text>
                 <TextInput
                     style={styles.input}
