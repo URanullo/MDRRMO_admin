@@ -20,7 +20,7 @@ export default function LoginForm({ onSubmit, isLoading }: LoginFormProps) {
                 <View style={styles.avatar}>
                     <MaterialIcons name="local-hospital" size={48} color="#fff" />
                 </View>
-                <Text style={styles.brand}>MDRRMO - Bacuag</Text>
+                <Text style={styles.brand}> MDRRMO - Bacuag</Text>
                 <Text style={styles.subtitleBrand}>Emergency Response</Text>
             </View>
             <View style={styles.card}>
