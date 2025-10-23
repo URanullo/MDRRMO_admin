@@ -49,6 +49,18 @@ export default function RootLayout() {
     }
   };
 
+  // Debug function to log notification structure
+  const debugNotificationData = (notification: any) => {
+    console.log('=== NOTIFICATION DEBUG INFO ===');
+    console.log('Full notification object:', JSON.stringify(notification, null, 2));
+    console.log('Notification request:', notification.request);
+    console.log('Notification content:', notification.request?.content);
+    console.log('Notification data:', notification.request?.content?.data);
+    console.log('Notification title:', notification.request?.content?.title);
+    console.log('Notification body:', notification.request?.content?.body);
+    console.log('================================');
+  };
+
   useEffect(() => {
     (async () => {
         // Initialize emergency wake service
@@ -67,68 +79,99 @@ export default function RootLayout() {
     // Listen for incoming notifications
     const subscription = Notifications.addNotificationReceivedListener(notification => {
       console.log('Mobile notification received:', notification);
-       const notificationData = notification.request.content.data as any;
-      const userDetails = notificationData as EmergencyReportPayload;
       
-      console.log('Notification data:', notificationData);
-      console.log('User details:', userDetails);
-
-      // Wake screen and foreground app functionality
-      handleEmergencyAlertWake();
+      // Debug notification structure
+      debugNotificationData(notification);
       
-      // Also use the enhanced wake service (works better after ejecting)
-      const emergencyService = EmergencyWakeService.getInstance();
-      if (emergencyService.isServiceAvailable()) {
-        emergencyService.handleEmergencyAlert(userDetails).catch(error => {
-          console.error('Error in enhanced wake service:', error);
-        });
-      }
-
-      const bodyDetails = `${notification.request.content.body}\nReporter: ${userDetails.reportedBy} - (${userDetails.barangay})\nContact No: ${userDetails.reporterContactNumber}\n${userDetails.description}`;
-
-      setModalTitle(notification.request.content.title || 'Emergency Alert');
-      setModalBody(bodyDetails);
-      
-      const imageUrl = userDetails.images?.[0] || null;
-
-      setModalImageUrl(imageUrl);
-      setShowModal(true);
-
-      (async () => {
-        const { sound } = await Audio.Sound.createAsync(
-          require('./assets/notify.mp3')
-        );
-        await sound.playAsync();
-      })();
-
-      // --- Save Notification Data to Firestore ---
-      if (notificationData && typeof notificationData === 'object') {
-        const reportPayload = notificationData as any;
-
-        if (reportPayload.type && reportPayload.description && reportPayload.barangay) {
-          saveNewEmergencyReport(reportPayload)
-            .then(reportId => {
-              if (reportId) {
-                console.log(`Report data from notification ${notification.request.identifier} saved as Firestore document ${reportId}`);
-                // Optionally, trigger a local in-app update or subtle UI cue
-              } else {
-                console.error(`Failed to save report data from notification ${notification.request.identifier}`);
-              }
-            })
-            .catch(error => {
-              console.error(`Error in saveNewEmergencyReport promise for notification ${notification.request.identifier}:`, error);
-            });
-        } else {
-          console.warn('Received notification with insufficient data to save report:', reportPayload);
-          setModalTitle("Data Incomplete");
-          setModalBody("Received an emergency alert, but some details are missing to create a full report.");
+      try {
+        const notificationData = notification.request.content.data as any;
+        console.log('Raw notification data:', notificationData);
+        
+        // Validate notification data exists
+        if (!notificationData) {
+          console.warn('No notification data received');
+          setModalTitle('Emergency Alert');
+          setModalBody('Emergency notification received but no detailed data available.');
           setModalImageUrl(null);
           setShowModal(true);
+          return;
         }
-      } else {
-        console.warn('Received notification without a valid data payload.');
-        setModalTitle("Alert Received");
-        setModalBody("An emergency alert was received, but detailed information was not included for reporting.");
+
+        const userDetails = notificationData as EmergencyReportPayload;
+        console.log('Parsed user details:', userDetails);
+
+        // Validate required fields with safe defaults
+        const safeUserDetails = {
+          reportedBy: userDetails?.reportedBy || 'Unknown Reporter',
+          barangay: userDetails?.barangay || 'Unknown Location',
+          reporterContactNumber: userDetails?.reporterContactNumber || 'N/A',
+          description: userDetails?.description || 'No description provided',
+          type: userDetails?.type || 'Emergency',
+          images: userDetails?.images || [],
+          email: userDetails?.email || 'N/A',
+          priority: userDetails?.priority || 'Medium',
+          location: userDetails?.location || 'Unknown Location'
+        };
+
+        console.log('Safe user details:', safeUserDetails);
+
+        // Wake screen and foreground app functionality
+        handleEmergencyAlertWake();
+        
+        // Also use the enhanced wake service (works better after ejecting)
+        const emergencyService = EmergencyWakeService.getInstance();
+        if (emergencyService.isServiceAvailable()) {
+          emergencyService.handleEmergencyAlert(safeUserDetails).catch(error => {
+            console.error('Error in enhanced wake service:', error);
+          });
+        }
+
+        const bodyDetails = `${notification.request.content.body || 'Emergency Alert'}\nReporter: ${safeUserDetails.reportedBy} - (${safeUserDetails.barangay})\nContact No: ${safeUserDetails.reporterContactNumber}\n${safeUserDetails.description}`;
+
+        setModalTitle(notification.request.content.title || 'Emergency Alert');
+        setModalBody(bodyDetails);
+        
+        const imageUrl = safeUserDetails.images?.[0] || null;
+
+        setModalImageUrl(imageUrl);
+        setShowModal(true);
+
+        // Play emergency sound
+        (async () => {
+          try {
+            const { sound } = await Audio.Sound.createAsync(
+              require('./assets/notify.mp3')
+            );
+            await sound.playAsync();
+          } catch (soundError) {
+            console.error('Error playing emergency sound:', soundError);
+          }
+        })();
+
+        // --- Save Notification Data to Firestore ---
+        try {
+          if (safeUserDetails.type && safeUserDetails.description && safeUserDetails.barangay) {
+            saveNewEmergencyReport(safeUserDetails)
+              .then(reportId => {
+                if (reportId) {
+                  console.log(`Report data from notification ${notification.request.identifier} saved as Firestore document ${reportId}`);
+                } else {
+                  console.error(`Failed to save report data from notification ${notification.request.identifier}`);
+                }
+              })
+              .catch(error => {
+                console.error(`Error in saveNewEmergencyReport promise for notification ${notification.request.identifier}:`, error);
+              });
+          } else {
+            console.warn('Received notification with insufficient data to save report:', safeUserDetails);
+          }
+        } catch (saveError) {
+          console.error('Error saving notification data to Firestore:', saveError);
+        }
+      } catch (error) {
+        console.error('Error processing notification:', error);
+        setModalTitle('Emergency Alert');
+        setModalBody('Emergency notification received but there was an error processing the data.');
         setModalImageUrl(null);
         setShowModal(true);
       }
