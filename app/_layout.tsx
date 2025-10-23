@@ -100,38 +100,24 @@ export default function RootLayout() {
         const userDetails = notificationData as EmergencyReportPayload;
         console.log('Parsed user details:', userDetails);
 
-        // Validate required fields with safe defaults
-        const safeUserDetails = {
-          reportedBy: userDetails?.reportedBy || 'Unknown Reporter',
-          barangay: userDetails?.barangay || 'Unknown Location',
-          reporterContactNumber: userDetails?.reporterContactNumber || 'N/A',
-          description: userDetails?.description || 'No description provided',
-          type: userDetails?.type || 'Emergency',
-          images: userDetails?.images || [],
-          email: userDetails?.email || 'N/A',
-          priority: userDetails?.priority || 'Medium',
-          location: userDetails?.location || 'Unknown Location'
-        };
-
-        console.log('Safe user details:', safeUserDetails);
-
         // Wake screen and foreground app functionality
         handleEmergencyAlertWake();
         
         // Also use the enhanced wake service (works better after ejecting)
         const emergencyService = EmergencyWakeService.getInstance();
         if (emergencyService.isServiceAvailable()) {
-          emergencyService.handleEmergencyAlert(safeUserDetails).catch(error => {
+          emergencyService.handleEmergencyAlert(userDetails).catch(error => {
             console.error('Error in enhanced wake service:', error);
           });
         }
 
-        const bodyDetails = `${notification.request.content.body || 'Emergency Alert'}\nReporter: ${safeUserDetails.reportedBy} - (${safeUserDetails.barangay})\nContact No: ${safeUserDetails.reporterContactNumber}\n${safeUserDetails.description}`;
+        // Restore original Firebase field access with safe fallbacks
+        const bodyDetails = `${notification.request.content.body}\nReporter: ${userDetails.reportedBy} - (${userDetails.barangay})\nContact No: ${userDetails.reporterContactNumber}\n${userDetails.description}`;
 
         setModalTitle(notification.request.content.title || 'Emergency Alert');
         setModalBody(bodyDetails);
         
-        const imageUrl = safeUserDetails.images?.[0] || null;
+        const imageUrl = userDetails.images?.[0] || null;
 
         setModalImageUrl(imageUrl);
         setShowModal(true);
@@ -150,8 +136,8 @@ export default function RootLayout() {
 
         // --- Save Notification Data to Firestore ---
         try {
-          if (safeUserDetails.type && safeUserDetails.description && safeUserDetails.barangay) {
-            saveNewEmergencyReport(safeUserDetails)
+          if (userDetails.type && userDetails.description && userDetails.barangay) {
+            saveNewEmergencyReport(userDetails)
               .then(reportId => {
                 if (reportId) {
                   console.log(`Report data from notification ${notification.request.identifier} saved as Firestore document ${reportId}`);
@@ -163,7 +149,7 @@ export default function RootLayout() {
                 console.error(`Error in saveNewEmergencyReport promise for notification ${notification.request.identifier}:`, error);
               });
           } else {
-            console.warn('Received notification with insufficient data to save report:', safeUserDetails);
+            console.warn('Received notification with insufficient data to save report:', userDetails);
           }
         } catch (saveError) {
           console.error('Error saving notification data to Firestore:', saveError);
