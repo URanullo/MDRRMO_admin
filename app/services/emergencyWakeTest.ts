@@ -1,7 +1,7 @@
 // Test script for emergency wake and foreground functionality
 // Run this to test the current Expo implementation
 
-import { EmergencyWakeService } from './app/services/emergencyWakeService';
+import { EmergencyWakeService } from './emergencyWakeService';
 
 export const testEmergencyWakeFunctionality = async () => {
   console.log('🧪 Testing Emergency Wake Functionality');
