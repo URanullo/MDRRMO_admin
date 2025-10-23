@@ -3,8 +3,9 @@ import { Image } from 'expo-image';
 import * as Notifications from 'expo-notifications';
 import { Stack } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Dimensions, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { AppState, Dimensions, Modal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { EmergencyReportPayload, saveNewEmergencyReport } from './services/emergencyService';
+import { EmergencyWakeService } from './services/emergencyWakeService';
 
 export default function RootLayout() {
   const [showModal, setShowModal] = useState(false);
@@ -12,8 +13,48 @@ export default function RootLayout() {
   const [modalBody, setModalBody] = useState('');
   const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
 
+  // Function to handle emergency alert wake and foreground behavior
+  const handleEmergencyAlertWake = async () => {
+    try {
+      console.log('Emergency alert received - attempting to wake and foreground app');
+      
+      // Request notification permissions to ensure we can show notifications
+      const { status } = await Notifications.getPermissionsAsync();
+      if (status !== 'granted') {
+        await Notifications.requestPermissionsAsync();
+      }
+
+      // Schedule an immediate notification to help wake the screen
+      await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🚨 EMERGENCY ALERT',
+          body: 'Critical emergency report received - Tap to view',
+          sound: 'default',
+          priority: Notifications.AndroidNotificationPriority.MAX,
+          vibrate: [0, 250, 250, 250],
+        },
+        trigger: null, // Show immediately
+      });
+
+      // Try to bring app to foreground if it's in background
+      if (AppState.currentState !== 'active') {
+        console.log('App is in background, attempting to bring to foreground');
+        // Note: In Expo managed workflow, we can't directly control app state
+        // This will be handled by the notification tap
+      }
+
+      console.log('Emergency alert wake sequence completed');
+    } catch (error) {
+      console.error('Error in emergency alert wake sequence:', error);
+    }
+  };
+
   useEffect(() => {
     (async () => {
+        // Initialize emergency wake service
+        const emergencyService = EmergencyWakeService.getInstance();
+        await emergencyService.initialize();
+
         await Notifications.setNotificationChannelAsync('default', {
           name: 'default',
           importance: Notifications.AndroidImportance.MAX,
@@ -32,12 +73,23 @@ export default function RootLayout() {
       console.log('Notification data:', notificationData);
       console.log('User details:', userDetails);
 
+      // Wake screen and foreground app functionality
+      handleEmergencyAlertWake();
+      
+      // Also use the enhanced wake service (works better after ejecting)
+      const emergencyService = EmergencyWakeService.getInstance();
+      if (emergencyService.isServiceAvailable()) {
+        emergencyService.handleEmergencyAlert(userDetails).catch(error => {
+          console.error('Error in enhanced wake service:', error);
+        });
+      }
+
       const bodyDetails = `${notification.request.content.body}\nReporter: ${userDetails.reportedBy} - (${userDetails.barangay})\nContact No: ${userDetails.reporterContactNumber}\n${userDetails.description}`;
 
       setModalTitle(notification.request.content.title || 'Emergency Alert');
       setModalBody(bodyDetails);
       
-      const imageUrl = userDetails.images[0] || null;
+      const imageUrl = userDetails.images?.[0] || null;
 
       setModalImageUrl(imageUrl);
       setShowModal(true);
@@ -82,8 +134,16 @@ export default function RootLayout() {
       }
     });
 
+    // Handle notification taps to bring app to foreground
+    const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('Notification tapped - bringing app to foreground');
+      // The app will automatically come to foreground when notification is tapped
+      // This is the closest we can get to foregrounding in Expo managed workflow
+    });
+
     return () => {
        Notifications.removeNotificationSubscription(subscription);
+       Notifications.removeNotificationSubscription(responseSubscription);
      };
   }, []);
 
